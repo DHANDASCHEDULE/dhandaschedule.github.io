@@ -194,3 +194,82 @@ body {
   .set-pip:before { width: 5px; height: 5px; flex-basis: 5px; }
   .calendar-legend { padding: 14px 10px; font-size: 8px; }
 }
+
+/* Public club booking and private availability controls */
+.book-button {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--red);
+  background: #a9121b;
+  color: #fff;
+  font: 9px var(--mono);
+  letter-spacing: .08em;
+  cursor: pointer;
+  transition: background .2s, box-shadow .2s, transform .2s;
+}
+.book-button span { margin-left: 7px; }
+.book-button:hover { background: #d41d29; box-shadow: 0 0 20px #f02d3755; transform: translateY(-1px); }
+.request-count { display: inline-grid; place-items: center; min-width: 17px; height: 17px; border-radius: 50%; background: #6d2025; color: #fff !important; margin-left: 6px !important; font-size: 8px; }
+.status-legend { gap: 7px !important; }
+.status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-left: 5px; }
+.status-dot.available, .set-pip.is-available:before { background: #62d69a; }
+.status-dot.reserved, .set-pip.is-reserved:before { background: var(--red); }
+.status-dot.unavailable, .set-pip.is-unavailable:before { background: #929292; }
+.set-pip.is-available { color: #a9eac4; }
+.set-pip.is-unavailable { color: #969696; }
+.day-event { justify-content: flex-start; }
+.slot-status { margin-left: auto; font: 8px var(--mono); letter-spacing: .06em; white-space: nowrap; }
+.status-available { color: #75dda7; }
+.status-reserved { color: #ff737b; }
+.status-unavailable { color: #aaa; }
+.slot-edit { border: 1px solid #4a2528; background: #130d0e; color: #ddd; padding: 6px 8px; font: 8px var(--mono); cursor: pointer; }
+.slot-edit:hover { border-color: var(--red); color: #fff; }
+.slot-book { border: 1px solid #3c7755; background: #10251a; color: #95e6b4; padding: 6px 8px; font: 8px var(--mono); cursor: pointer; }
+.slot-book:hover { background: #173a27; color: #fff; box-shadow: 0 0 14px #62d69a30; }
+.admin-dialog { max-height: min(88vh, 900px); overflow-y: auto; }
+.admin-form textarea {
+  width: 100%; min-height: 90px; border: 1px solid #383838; border-radius: 0; outline: 0;
+  background: #0b0b0b; color: var(--white); padding: 12px; font: 13px/1.5 var(--sans); resize: vertical;
+}
+.admin-form textarea:focus { border-color: var(--red); box-shadow: 0 0 16px #f02d3720; }
+.optional-label { color: #777; font-size: 8px; }
+.honeypot { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+.request-list { display: grid; gap: 12px; margin-top: 22px; }
+.request-card { border: 1px solid #342124; background: #151112; padding: 16px; }
+.request-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.request-card h3 { margin: 0; color: #fff; font: 700 16px var(--sans); }
+.request-state { padding: 5px 7px; border: 1px solid #453638; color: #bbb; font: 8px var(--mono); letter-spacing: .08em; }
+.request-pending { border-color: #8a5920; color: #f3c77c; }
+.request-accepted { border-color: #285d42; color: #7de0a6; }
+.request-declined { border-color: #642b30; color: #ff858b; }
+.request-contact, .request-when, .request-message { margin: 10px 0 0; color: #c7c7c7; font-size: 12px; line-height: 1.6; }
+.request-email { display: inline-block; margin-top: 3px; color: #f08a90; font: 10px var(--mono); overflow-wrap: anywhere; }
+.request-when { color: #eee; font: 10px/1.6 var(--mono); }
+.request-message { padding-top: 10px; border-top: 1px solid #30272a; white-space: pre-wrap; overflow-wrap: anywhere; }
+.request-actions { display: flex; gap: 8px; margin-top: 14px; }
+.request-actions button { min-height: 36px; padding: 0 11px; border: 1px solid #612329; background: #251214; color: #fff; font: 8px var(--mono); cursor: pointer; }
+.request-actions .request-accept { border-color: #327451; background: #10251a; }
+.request-actions button:hover { filter: brightness(1.35); }
+.request-actions button:disabled { opacity: .5; cursor: wait; }
+.request-empty { color: #aaa; font: 11px/1.7 var(--mono); }
+.request-empty.is-error { color: #ff858b; }
+.request-dialog { width: min(620px, calc(100vw - 32px)); }
+.booking-dialog { width: min(520px, calc(100vw - 32px)); }
+@media(max-width:850px) {
+  .topbar-right { gap: 12px; }
+  .nav-actions { gap: 7px; }
+  .admin-tools { flex-wrap: wrap; justify-content: flex-end; }
+}
+@media(max-width:600px) {
+  .topbar { padding-left: 12px; padding-right: 12px; }
+  .topbar-right { gap: 5px; }
+  .nav-actions { gap: 5px; }
+  .nav-calendar, .login-button, .book-button { min-height: 34px; padding: 0 7px; font-size: 7px; letter-spacing: .04em; }
+  .book-button span { margin-left: 3px; }
+  .admin-nav-button { min-height: 35px; text-align: left; }
+  .status-legend { gap: 4px !important; font-size: 7px; }
+  .status-dot { width: 6px; height: 6px; margin-left: 2px; }
+  .slot-status { font-size: 7px; }
+  .slot-book, .slot-edit { padding: 6px; font-size: 7px; }
+  .request-actions { flex-direction: column; }
+}

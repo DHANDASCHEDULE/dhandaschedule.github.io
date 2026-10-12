@@ -9,9 +9,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261012-readable-calendar">
+  <link rel="stylesheet" href="style.css?v=20261012-booking-system">
   <script src="supabase-config.js?v=20261012-admin"></script>
-  <script type="module" src="script.js?v=20261012-host-manager"></script>
+  <script type="module" src="script.js?v=20261012-booking-system"></script>
 </head>
 <body>
   <header class="topbar">
@@ -20,9 +20,11 @@
       <span class="timezone"><i></i> PACIFIC TIME / SLT</span>
       <div class="nav-actions">
         <a class="nav-calendar" href="#calendar">CALENDAR <span>↘</span></a>
+        <button class="book-button" id="booking-open" type="button">BOOK DHANDA <span>↗</span></button>
         <div class="admin-nav" id="admin-nav">
           <button class="login-button" id="login-open" type="button">LOGIN <span>↗</span></button>
           <div class="admin-tools" id="admin-tools" hidden>
+            <button class="admin-nav-button" id="booking-requests-open" type="button">SOLICITAÇÕES <span class="request-count" id="request-count">0</span></button>
             <button class="admin-nav-button" id="add-open" type="button">ADICIONAR HORÁRIO <span>＋</span></button>
             <button class="admin-nav-button" id="remove-open" type="button">REMOVER HORÁRIO <span>−</span></button>
             <button class="admin-nav-button logout-button" id="logout-button" type="button">SAIR</button>
@@ -46,12 +48,12 @@
     </section>
 
     <section class="next-set" aria-labelledby="next-heading">
-      <div class="next-topline"><p class="eyebrow"><span class="live-dot"></span> UP NEXT</p><span class="next-index" id="next-index">01 / OCT</span></div>
+      <div class="next-topline"><p class="eyebrow"><span class="live-dot"></span> NEXT AVAILABLE</p><span class="next-index" id="next-index">BOOKING / SLT</span></div>
       <div class="next-content">
         <div>
-          <p class="next-day" id="next-day">LOADING NEXT SHIFT</p>
+          <p class="next-day" id="next-day">REQUEST A DATE</p>
           <h2 id="next-heading">DHANDA<span>.</span></h2>
-          <p class="next-subtitle" id="next-subtitle">UPCOMING WORK SHIFT</p>
+          <p class="next-subtitle" id="next-subtitle">AVAILABLE FOR BOOKINGS</p>
         </div>
         <div class="next-time-wrap">
           <span class="next-time-label">START TIME <i>· SLT</i></span>
@@ -59,13 +61,13 @@
           <span class="countdown" id="countdown">CALCULATING</span>
         </div>
       </div>
-      <div class="next-bottom"><span>OCTOBER 2026 WORK SCHEDULE</span><span>LOCAL TIME / SLT <b>↗</b></span></div>
+      <div class="next-bottom"><span>HOST &amp; MANAGER AVAILABILITY</span><span>LOCAL TIME / SLT <b>↗</b></span></div>
     </section>
 
     <section id="calendar" class="calendar-section" aria-labelledby="calendar-title">
       <div class="section-heading">
         <div><p class="eyebrow">01 / THE MONTH</p><h2 id="calendar-title">CALENDAR<span>.</span></h2></div>
-        <p class="section-caption">Select a date to see all scheduled shifts.</p>
+        <p class="section-caption">Check available slots or request your preferred date and time.</p>
       </div>
 
       <div class="calendar-toolbar">
@@ -83,18 +85,18 @@
             <span>SUN</span><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span>
           </div>
           <div class="calendar-grid" id="calendar-grid" role="grid" aria-label="Monthly work schedule"></div>
-          <div class="calendar-legend"><span><i></i> SCHEDULED SHIFT</span><span id="month-total">-- SHIFTS THIS MONTH</span></div>
+          <div class="calendar-legend"><span class="status-legend"><i class="status-dot available"></i> AVAILABLE <i class="status-dot reserved"></i> RESERVED <i class="status-dot unavailable"></i> UNAVAILABLE</span><span id="month-total">-- TIME SLOTS</span></div>
         </div>
 
         <aside class="day-panel" aria-live="polite" aria-labelledby="selected-date">
           <p class="eyebrow">DAY VIEW</p>
           <h3 id="selected-date">SELECT A DATE</h3>
-          <p class="day-count" id="day-count">Choose any day with a red marker.</p>
+          <p class="day-count" id="day-count">Choose a date to review its availability.</p>
           <div class="day-events" id="day-events"></div>
-          <p class="panel-note">Shift details, venues and durations can be added when available.</p>
+          <p class="panel-note">Each entry is a time slot without a set end time. Use BOOK DHANDA to request a date.</p>
         </aside>
       </div>
-      <p class="calendar-footnote">Times are shown in Pacific Time (SLT). Each listed time marks a scheduled shift start.</p>
+      <p class="calendar-footnote">Times are shown in Pacific Time (SLT). Each entry is a time slot; no end time is set yet.</p>
     </section>
   </main>
 
@@ -110,9 +112,15 @@
       <p class="form-message" id="login-message" role="status"></p>
     </form>
     <form id="add-form" class="admin-form" hidden>
-      <p class="form-intro">ADICIONE UM HORÁRIO DE TRABALHO À AGENDA</p>
+      <p class="form-intro">ADICIONE OU EDITE UM HORÁRIO NA AGENDA</p>
       <label for="add-date">DIA</label><input id="add-date" type="date" required>
       <label for="add-time">HORÁRIO · SLT</label><input id="add-time" type="time" required>
+      <label for="schedule-status">STATUS PÚBLICO</label>
+      <select id="schedule-status" required>
+        <option value="available">DISPONÍVEL PARA BOOKING</option>
+        <option value="reserved">RESERVADO</option>
+        <option value="unavailable">INDISPONÍVEL</option>
+      </select>
       <button class="primary-action" type="submit">SALVAR HORÁRIO <span>＋</span></button>
       <p class="form-message" id="add-message" role="status"></p>
     </form>
@@ -124,6 +132,30 @@
       <button class="primary-action danger-action" type="submit">REMOVER DA AGENDA <span>−</span></button>
       <p class="form-message" id="remove-message" role="status"></p>
     </form>
+  </dialog>
+
+  <dialog class="admin-dialog booking-dialog" id="booking-dialog" aria-labelledby="booking-dialog-title">
+    <div class="dialog-topline"><p class="eyebrow">DHANDA / BOOKING INQUIRY</p><button class="dialog-close" id="booking-close" type="button" aria-label="Close booking form">×</button></div>
+    <h2 id="booking-dialog-title">BOOK DHANDA<span>.</span></h2>
+    <p class="form-intro">Send your club, preferred date and time. DHANDA will review your request.</p>
+    <form id="booking-form" class="admin-form">
+      <label for="club-name">CLUB / ORGANIZATION</label><input id="club-name" maxlength="120" required>
+      <label for="contact-name">YOUR NAME</label><input id="contact-name" maxlength="120" required>
+      <label for="contact-email">CONTACT EMAIL</label><input id="contact-email" type="email" maxlength="320" required>
+      <label for="requested-date">PREFERRED DATE</label><input id="requested-date" type="date" required>
+      <label for="requested-time">PREFERRED TIME · SLT</label><input id="requested-time" type="time" required>
+      <label for="booking-message">MESSAGE <span class="optional-label">OPTIONAL</span></label><textarea id="booking-message" maxlength="1500" rows="3" placeholder="Tell DHANDA about the booking."></textarea>
+      <div class="honeypot" aria-hidden="true"><label for="booking-website">Website</label><input id="booking-website" name="website" tabindex="-1" autocomplete="off"></div>
+      <button class="primary-action" type="submit">SEND BOOKING REQUEST <span>↗</span></button>
+      <p class="form-message" id="booking-message-status" role="status"></p>
+    </form>
+  </dialog>
+
+  <dialog class="admin-dialog request-dialog" id="booking-requests-dialog" aria-labelledby="requests-title">
+    <div class="dialog-topline"><p class="eyebrow">DHANDA / PRIVATE INBOX</p><button class="dialog-close" id="requests-close" type="button" aria-label="Close requests">×</button></div>
+    <h2 id="requests-title">BOOKING<span>.</span></h2>
+    <p class="form-intro">Only DHANDA can view and manage these inquiries.</p>
+    <div class="request-list" id="booking-request-list" aria-live="polite"><p class="request-empty">Loading requests…</p></div>
   </dialog>
 
   <footer><span class="wordmark">DHANDA<span>•</span></span><span>HOST &amp; MANAGER / 2026</span><a href="#top">BACK TO TOP ↑</a></footer>
