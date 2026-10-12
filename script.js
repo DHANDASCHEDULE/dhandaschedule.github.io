@@ -1,4 +1,4 @@
-const schedule = {
+const INITIAL_SCHEDULE = {
   "2026-10-01": ["09:00", "10:30", "12:00", "13:00", "14:00", "15:00", "18:00"],
   "2026-10-02": ["09:00", "10:30", "12:00", "14:00", "15:00", "17:00", "18:00", "19:00"],
   "2026-10-03": ["10:00", "14:00", "15:00", "17:00"],
@@ -32,35 +32,59 @@ const schedule = {
   "2026-10-31": ["10:00", "14:00", "14:00", "15:00", "17:00"]
 };
 
-const pacificFormat = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Los_Angeles", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" });
-const dateParts = (date) => Object.fromEntries(pacificFormat.formatToParts(date).filter(part => part.type !== "literal").map(part => [part.type, part.value]));
+const PACIFIC = "America/Los_Angeles";
+const ADMIN_USERNAME = "dhanda";
+const ADMIN_EMAIL = "dhanda@dhandaschedule.github.io";
+const dateFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: PACIFIC, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" });
+const dateParts = (date) => Object.fromEntries(dateFormatter.formatToParts(date).filter(part => part.type !== "literal").map(part => [part.type, part.value]));
 const toKey = (year, month, day) => `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-const allSets = Object.entries(schedule).flatMap(([date, times]) => times.map(time => ({ date, time, stamp: `${date}T${time}:00` }))).sort((a, b) => a.stamp.localeCompare(b.stamp));
+
+let schedule = structuredClone(INITIAL_SCHEDULE);
 let viewedMonth = new Date(2026, 9, 1);
 let selectedDate = "2026-10-12";
+let supabaseClient = null;
+let authReady = false;
 
 const monthLabel = document.querySelector("#month-label");
 const calendarGrid = document.querySelector("#calendar-grid");
 const dayTitle = document.querySelector("#selected-date");
 const dayCount = document.querySelector("#day-count");
 const dayEvents = document.querySelector("#day-events");
+const adminDialog = document.querySelector("#admin-dialog");
+const loginForm = document.querySelector("#login-form");
+const addForm = document.querySelector("#add-form");
+const removeForm = document.querySelector("#remove-form");
 
 function timeLabel(time) {
   const [hour, minute] = time.split(":").map(Number);
-  const period = hour >= 12 ? "PM" : "AM";
-  const displayHour = hour % 12 || 12;
-  return `${displayHour}:${String(minute).padStart(2, "0")} ${period}`;
+  return `${hour % 12 || 12}:${String(minute).padStart(2, "0")} ${hour >= 12 ? "PM" : "AM"}`;
 }
 
 function humanDate(key, options = { weekday: "long", month: "long", day: "numeric" }) {
-  return new Intl.DateTimeFormat("en-US", { ...options, timeZone: "America/Los_Angeles" }).format(new Date(`${key}T12:00:00-07:00`));
+  return new Intl.DateTimeFormat("en-US", { ...options, timeZone: PACIFIC }).format(new Date(`${key}T12:00:00-07:00`));
+}
+
+function pacificInstant(key, time) {
+  const [year, month, day] = key.split("-").map(Number);
+  const [hour, minute] = time.split(":").map(Number);
+  const desired = Date.UTC(year, month - 1, day, hour, minute);
+  let guess = desired;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const parts = dateParts(new Date(guess));
+    const represented = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day), Number(parts.hour), Number(parts.minute));
+    guess += desired - represented;
+  }
+  return new Date(guess);
+}
+
+function allSets() {
+  return Object.entries(schedule).flatMap(([date, times]) => times.map(time => ({ date, time, stamp: `${date}T${time}` }))).sort((a, b) => a.stamp.localeCompare(b.stamp));
 }
 
 function setNext() {
   const parts = dateParts(new Date());
-  const todayKey = `${parts.year}-${parts.month}-${parts.day}`;
-  const nowMinutes = Number(parts.hour) * 60 + Number(parts.minute);
-  const next = allSets.find(set => set.date > todayKey || (set.date === todayKey && Number(set.time.slice(0, 2)) * 60 + Number(set.time.slice(3)) > nowMinutes));
+  const nowKey = `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+  const next = allSets().find(set => set.stamp > nowKey);
   const heading = document.querySelector("#next-day");
   const time = document.querySelector("#next-time");
   const index = document.querySelector("#next-index");
@@ -71,16 +95,14 @@ function setNext() {
     time.textContent = "—";
     index.textContent = "SCHEDULE COMPLETE";
     subtitle.textContent = "CHECK BACK FOR THE NEXT DATE";
-    countdown.textContent = "OCTOBER 2026";
+    countdown.textContent = "CHECK BACK SOON";
     return;
   }
-  selectedDate = next.date;
   heading.textContent = humanDate(next.date).toUpperCase();
   time.textContent = timeLabel(next.time);
-  index.textContent = `01 / ${new Intl.DateTimeFormat("en-US", { month: "short", timeZone: "America/Los_Angeles" }).format(new Date(`${next.date}T12:00:00-07:00`)).toUpperCase()}`;
+  index.textContent = `01 / ${new Intl.DateTimeFormat("en-US", { month: "short", timeZone: PACIFIC }).format(new Date(`${next.date}T12:00:00-07:00`)).toUpperCase()}`;
   subtitle.textContent = "DHANDA / SCHEDULED SET";
-  const target = new Date(`${next.date}T${next.time}:00-07:00`);
-  const remaining = Math.max(0, target.getTime() - Date.now());
+  const remaining = Math.max(0, pacificInstant(next.date, next.time).getTime() - Date.now());
   const days = Math.floor(remaining / 86400000);
   const hours = Math.floor(remaining % 86400000 / 3600000);
   const minutes = Math.floor(remaining % 3600000 / 60000);
@@ -167,6 +189,139 @@ function renderCalendar() {
   showSelectedDay();
 }
 
+function supabaseConfigured() {
+  const config = window.DHANDA_SUPABASE;
+  return Boolean(config?.url && config?.anonKey && !config.url.includes("YOUR_PROJECT") && !config.anonKey.includes("YOUR_SUPABASE"));
+}
+
+async function connectSupabase() {
+  if (!supabaseConfigured()) return null;
+  if (!supabaseClient) {
+    const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
+    supabaseClient = createClient(window.DHANDA_SUPABASE.url, window.DHANDA_SUPABASE.anonKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false } });
+  }
+  return supabaseClient;
+}
+
+async function loadRemoteSchedule() {
+  try {
+    const client = await connectSupabase();
+    if (!client) return;
+    const { data, error } = await client.from("schedule_events").select("event_date,start_time").order("event_date").order("start_time");
+    if (error) throw error;
+    schedule = {};
+    for (const row of data) {
+      const date = row.event_date;
+      const time = String(row.start_time).slice(0, 5);
+      (schedule[date] ||= []).push(time);
+    }
+    renderCalendar();
+    setNext();
+  } catch (error) {
+    console.error("Could not load DHANDA schedule", error);
+    document.querySelector("#day-count").textContent = "Could not load saved schedule. Please try again later.";
+  }
+}
+
+function setAdminSession(isSignedIn) {
+  authReady = true;
+  document.querySelector("#admin-tools").hidden = !isSignedIn;
+  document.querySelector("#login-open").hidden = isSignedIn;
+}
+
+function showAdminForm(form) {
+  loginForm.hidden = form !== loginForm;
+  addForm.hidden = form !== addForm;
+  removeForm.hidden = form !== removeForm;
+  document.querySelector("#admin-dialog-title").innerHTML = form === loginForm ? "LOGIN<span>.</span>" : form === addForm ? "ADICIONAR<span>.</span>" : "REMOVER<span>.</span>";
+  document.querySelector("#dialog-eyebrow").textContent = form === loginForm ? "DHANDA / PRIVATE ACCESS" : "DHANDA / CALENDAR EDITOR";
+  adminDialog.showModal();
+}
+
+function setMessage(element, message, isError = false) {
+  element.textContent = message;
+  element.classList.toggle("is-error", isError);
+}
+
+async function startLogin() {
+  try {
+    const client = await connectSupabase();
+    if (!client) {
+      setMessage(document.querySelector("#login-message"), "O acesso está aguardando a configuração do Supabase.", true);
+      return;
+    }
+    const username = document.querySelector("#login-username").value.trim().toLowerCase();
+    const password = document.querySelector("#login-password").value;
+    if (username !== ADMIN_USERNAME) {
+      setMessage(document.querySelector("#login-message"), "Usuário ou senha inválidos.", true);
+      return;
+    }
+    const { error } = await client.auth.signInWithPassword({ email: ADMIN_EMAIL, password });
+    if (error) throw error;
+    setAdminSession(true);
+    document.querySelector("#login-password").value = "";
+    adminDialog.close();
+  } catch (error) {
+    setMessage(document.querySelector("#login-message"), "Não foi possível entrar. Confira o acesso e tente novamente.", true);
+  }
+}
+
+async function saveNewSet(event) {
+  event.preventDefault();
+  const message = document.querySelector("#add-message");
+  const date = document.querySelector("#add-date").value;
+  const time = document.querySelector("#add-time").value;
+  try {
+    const client = await connectSupabase();
+    if (!client || !authReady) throw new Error("Admin access is not configured.");
+    const { data: duplicate, error: lookupError } = await client.from("schedule_events").select("id").eq("event_date", date).eq("start_time", `${time}:00`).limit(1);
+    if (lookupError) throw lookupError;
+    if (duplicate.length) {
+      setMessage(message, "Esse horário já está cadastrado nesse dia.", true);
+      return;
+    }
+    const { error } = await client.from("schedule_events").insert({ event_date: date, start_time: `${time}:00` });
+    if (error) throw error;
+    setMessage(message, "Horário salvo e publicado na agenda.");
+    await loadRemoteSchedule();
+  } catch (error) {
+    setMessage(message, "Não foi possível salvar. Confira sua sessão e tente novamente.", true);
+  }
+}
+
+function refreshRemoveTimes() {
+  const date = document.querySelector("#remove-date").value;
+  const select = document.querySelector("#remove-time");
+  select.replaceChildren(new Option("DIA INTEIRO", ""));
+  [...new Set(schedule[date] || [])].sort().forEach(time => select.add(new Option(timeLabel(time), time)));
+}
+
+async function removeScheduledSet(event) {
+  event.preventDefault();
+  const message = document.querySelector("#remove-message");
+  const date = document.querySelector("#remove-date").value;
+  const time = document.querySelector("#remove-time").value;
+  const confirmText = time ? `Remover o horário ${timeLabel(time)} de ${humanDate(date)}?` : `Remover todos os horários de ${humanDate(date)}?`;
+  if (!window.confirm(confirmText)) return;
+  try {
+    const client = await connectSupabase();
+    if (!client || !authReady) throw new Error("Admin access is not configured.");
+    let request = client.from("schedule_events").delete().eq("event_date", date);
+    if (time) request = request.eq("start_time", `${time}:00`);
+    const { data, error } = await request.select("id");
+    if (error) throw error;
+    if (!data.length) {
+      setMessage(message, "Nenhum horário encontrado para essa seleção.", true);
+      return;
+    }
+    setMessage(message, time ? "Horário removido da agenda." : "Horários desse dia removidos da agenda.");
+    await loadRemoteSchedule();
+    refreshRemoveTimes();
+  } catch (error) {
+    setMessage(message, "Não foi possível remover. Confira sua sessão e tente novamente.", true);
+  }
+}
+
 document.querySelector("#previous-month").addEventListener("click", () => { viewedMonth = new Date(viewedMonth.getFullYear(), viewedMonth.getMonth() - 1, 1); renderCalendar(); });
 document.querySelector("#next-month").addEventListener("click", () => { viewedMonth = new Date(viewedMonth.getFullYear(), viewedMonth.getMonth() + 1, 1); renderCalendar(); });
 document.querySelector("#today-button").addEventListener("click", () => {
@@ -176,6 +331,44 @@ document.querySelector("#today-button").addEventListener("click", () => {
   renderCalendar();
 });
 
+document.querySelector("#login-open").addEventListener("click", () => {
+  setMessage(document.querySelector("#login-message"), "");
+  showAdminForm(loginForm);
+});
+document.querySelector("#add-open").addEventListener("click", () => {
+  document.querySelector("#add-date").value = selectedDate;
+  setMessage(document.querySelector("#add-message"), "");
+  showAdminForm(addForm);
+});
+document.querySelector("#remove-open").addEventListener("click", () => {
+  document.querySelector("#remove-date").value = selectedDate;
+  refreshRemoveTimes();
+  setMessage(document.querySelector("#remove-message"), "");
+  showAdminForm(removeForm);
+});
+document.querySelector("#logout-button").addEventListener("click", async () => {
+  if (supabaseClient) await supabaseClient.auth.signOut();
+  setAdminSession(false);
+});
+document.querySelector("#dialog-close").addEventListener("click", () => adminDialog.close());
+document.querySelector("#login-form").addEventListener("submit", event => { event.preventDefault(); startLogin(); });
+document.querySelector("#add-form").addEventListener("submit", saveNewSet);
+document.querySelector("#remove-form").addEventListener("submit", removeScheduledSet);
+document.querySelector("#remove-date").addEventListener("change", refreshRemoveTimes);
+
+document.querySelector("#remove-form").addEventListener("reset", refreshRemoveTimes);
+adminDialog.addEventListener("click", event => { if (event.target === adminDialog) adminDialog.close(); });
+
 setNext();
 renderCalendar();
 window.setInterval(setNext, 1000);
+
+if (supabaseConfigured()) {
+  connectSupabase().then(async client => {
+    const { data: { session } } = await client.auth.getSession();
+    const emailMatches = session?.user?.email?.toLowerCase() === ADMIN_EMAIL;
+    setAdminSession(emailMatches);
+    client.auth.onAuthStateChange((_event, nextSession) => setAdminSession(nextSession?.user?.email?.toLowerCase() === ADMIN_EMAIL));
+    await loadRemoteSchedule();
+  }).catch(error => console.error("Supabase initialization failed", error));
+}

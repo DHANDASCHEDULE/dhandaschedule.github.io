@@ -9,15 +9,26 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261012-calendar-glow">
-  <script src="script.js?v=20261012-dhanda-data" defer></script>
+  <link rel="stylesheet" href="style.css?v=20261012-admin">
+  <script src="supabase-config.js?v=20261012-admin"></script>
+  <script type="module" src="script.js?v=20261012-admin"></script>
 </head>
 <body>
   <header class="topbar">
     <a class="wordmark" href="#top" aria-label="DHANDA home">DHANDA<span>•</span></a>
     <div class="topbar-right">
       <span class="timezone"><i></i> PACIFIC TIME / SLT</span>
-      <a class="nav-calendar" href="#calendar">CALENDAR <span>↘</span></a>
+      <div class="nav-actions">
+        <a class="nav-calendar" href="#calendar">CALENDAR <span>↘</span></a>
+        <div class="admin-nav" id="admin-nav">
+          <button class="login-button" id="login-open" type="button">LOGIN <span>↗</span></button>
+          <div class="admin-tools" id="admin-tools" hidden>
+            <button class="admin-nav-button" id="add-open" type="button">ADICIONAR HORÁRIO <span>＋</span></button>
+            <button class="admin-nav-button" id="remove-open" type="button">REMOVER HORÁRIO <span>−</span></button>
+            <button class="admin-nav-button logout-button" id="logout-button" type="button">SAIR</button>
+          </div>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -83,6 +94,34 @@
       <p class="calendar-footnote">Times are shown in Pacific Time (SLT). Each listed time marks a scheduled set start.</p>
     </section>
   </main>
+
+  <dialog class="admin-dialog" id="admin-dialog" aria-labelledby="admin-dialog-title">
+    <div class="dialog-topline"><p class="eyebrow" id="dialog-eyebrow">DHANDA / PRIVATE ACCESS</p><button class="dialog-close" id="dialog-close" type="button" aria-label="Fechar">×</button></div>
+    <h2 id="admin-dialog-title">LOGIN<span>.</span></h2>
+    <form id="login-form" class="admin-form">
+      <label for="login-username">USUÁRIO</label>
+      <input id="login-username" name="username" autocomplete="username" required>
+      <label for="login-password">SENHA</label>
+      <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+      <button class="primary-action" type="submit">ENTRAR <span>↗</span></button>
+      <p class="form-message" id="login-message" role="status"></p>
+    </form>
+    <form id="add-form" class="admin-form" hidden>
+      <p class="form-intro">ADICIONE UM SET À AGENDA</p>
+      <label for="add-date">DIA</label><input id="add-date" type="date" required>
+      <label for="add-time">HORÁRIO · SLT</label><input id="add-time" type="time" required>
+      <button class="primary-action" type="submit">SALVAR HORÁRIO <span>＋</span></button>
+      <p class="form-message" id="add-message" role="status"></p>
+    </form>
+    <form id="remove-form" class="admin-form" hidden>
+      <p class="form-intro">ESCOLHA UM DIA E REMOVA UM HORÁRIO OU O DIA INTEIRO</p>
+      <label for="remove-date">DIA</label><input id="remove-date" type="date" required>
+      <label for="remove-time">HORÁRIO · DEIXE VAZIO PARA REMOVER O DIA TODO</label>
+      <select id="remove-time"><option value="">DIA INTEIRO</option></select>
+      <button class="primary-action danger-action" type="submit">REMOVER DA AGENDA <span>−</span></button>
+      <p class="form-message" id="remove-message" role="status"></p>
+    </form>
+  </dialog>
 
   <footer><span class="wordmark">DHANDA<span>•</span></span><span>SET CALENDAR / 2026</span><a href="#top">BACK TO TOP ↑</a></footer>
 </body>
