@@ -77,21 +77,21 @@ function pacificInstant(key, time) {
   return new Date(guess);
 }
 
-function allSets() {
+function allShifts() {
   return Object.entries(schedule).flatMap(([date, times]) => times.map(time => ({ date, time, stamp: `${date}T${time}` }))).sort((a, b) => a.stamp.localeCompare(b.stamp));
 }
 
 function setNext() {
   const parts = dateParts(new Date());
   const nowKey = `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
-  const next = allSets().find(set => set.stamp > nowKey);
+  const next = allShifts().find(shift => shift.stamp > nowKey);
   const heading = document.querySelector("#next-day");
   const time = document.querySelector("#next-time");
   const index = document.querySelector("#next-index");
   const subtitle = document.querySelector("#next-subtitle");
   const countdown = document.querySelector("#countdown");
   if (!next) {
-    heading.textContent = "NO UPCOMING SETS";
+    heading.textContent = "NO UPCOMING SHIFTS";
     time.textContent = "—";
     index.textContent = "SCHEDULE COMPLETE";
     subtitle.textContent = "CHECK BACK FOR THE NEXT DATE";
@@ -101,7 +101,7 @@ function setNext() {
   heading.textContent = humanDate(next.date).toUpperCase();
   time.textContent = timeLabel(next.time);
   index.textContent = `01 / ${new Intl.DateTimeFormat("en-US", { month: "short", timeZone: PACIFIC }).format(new Date(`${next.date}T12:00:00-07:00`)).toUpperCase()}`;
-  subtitle.textContent = "DHANDA / SCHEDULED SET";
+  subtitle.textContent = "DHANDA / HOST & MANAGER SHIFT";
   const remaining = Math.max(0, pacificInstant(next.date, next.time).getTime() - Date.now());
   const days = Math.floor(remaining / 86400000);
   const hours = Math.floor(remaining % 86400000 / 3600000);
@@ -113,7 +113,7 @@ function setNext() {
 function showSelectedDay() {
   const times = schedule[selectedDate] || [];
   dayTitle.textContent = humanDate(selectedDate, { weekday: "long", month: "long", day: "numeric" }).toUpperCase();
-  dayCount.textContent = times.length ? `${times.length} SCHEDULED ${times.length === 1 ? "SET" : "SETS"}` : "No sets scheduled for this date.";
+  dayCount.textContent = times.length ? `${times.length} SCHEDULED ${times.length === 1 ? "SHIFT" : "SHIFTS"}` : "No shifts scheduled for this date.";
   dayEvents.replaceChildren();
   times.forEach((time, index) => {
     const row = document.createElement("div");
@@ -123,7 +123,7 @@ function showSelectedDay() {
     clock.textContent = timeLabel(time);
     const label = document.createElement("span");
     label.className = "event-label";
-    label.textContent = `SET ${String(index + 1).padStart(2, "0")}`;
+    label.textContent = `SHIFT ${String(index + 1).padStart(2, "0")}`;
     row.append(clock, label);
     dayEvents.append(row);
   });
@@ -137,19 +137,19 @@ function renderCalendar() {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const cells = Math.ceil((offset + daysInMonth) / 7) * 7;
   calendarGrid.replaceChildren();
-  let totalSets = 0;
+  let totalShifts = 0;
   const todayParts = dateParts(new Date());
   const todayKey = `${todayParts.year}-${todayParts.month}-${todayParts.day}`;
   for (let index = 0; index < cells; index += 1) {
     const date = new Date(year, month, index - offset + 1);
     const key = toKey(date.getFullYear(), date.getMonth(), date.getDate());
     const times = schedule[key] || [];
-    totalSets += times.length;
+    totalShifts += times.length;
     const button = document.createElement("button");
     button.type = "button";
     button.className = "date-cell";
     button.setAttribute("role", "gridcell");
-    button.setAttribute("aria-label", `${humanDate(key)}${times.length ? `, ${times.length} sets` : ", no sets scheduled"}`);
+    button.setAttribute("aria-label", `${humanDate(key)}${times.length ? `, ${times.length} shifts` : ", no shifts scheduled"}`);
     button.setAttribute("aria-pressed", String(key === selectedDate));
     if (date.getMonth() !== month) button.classList.add("is-outside");
     if (key === selectedDate) button.classList.add("is-selected");
@@ -185,7 +185,7 @@ function renderCalendar() {
     });
     calendarGrid.append(button);
   }
-  document.querySelector("#month-total").textContent = `${totalSets} SCHEDULED SETS`;
+  document.querySelector("#month-total").textContent = `${totalShifts} SCHEDULED SHIFTS`;
   showSelectedDay();
 }
 

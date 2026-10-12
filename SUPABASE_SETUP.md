@@ -15,7 +15,7 @@ O site continua público para consulta. A conta autenticada `dhanda@dhandaschedu
 ## O que o painel faz
 
 - Login com usuário `dhanda` e senha validada pelo Supabase Auth.
-- “Adicionar horário” grava a data e hora SLT e atualiza a agenda pública e o cartão de próximo set.
+- “Adicionar horário” grava a data e hora SLT e atualiza a agenda pública e o cartão de próximo turno.
 - “Remover horário” permite apagar um horário específico ou todos os horários de um dia.
 - O banco permite leitura pública e restringe alterações à identidade autenticada da DHANDA usando Row Level Security.
 - A sessão autenticada fica no navegador; “Sair” encerra a sessão.

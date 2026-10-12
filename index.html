@@ -4,14 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#090909">
-  <meta name="description" content="Agenda de sets da DHANDA — calendário de apresentações e próximo set.">
-  <title>DHANDA — Set Calendar</title>
+  <meta name="description" content="Agenda de trabalho da DHANDA como host e manager, com calendário de horários e próximo turno.">
+  <title>DHANDA — Host &amp; Manager Schedule</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css?v=20261012-admin">
   <script src="supabase-config.js?v=20261012-admin"></script>
-  <script type="module" src="script.js?v=20261012-admin"></script>
+  <script type="module" src="script.js?v=20261012-host-manager"></script>
 </head>
 <body>
   <header class="topbar">
@@ -36,8 +36,8 @@
     <section class="intro" aria-labelledby="page-title">
       <div class="intro-copy">
         <p class="eyebrow"><span>DHANDA</span> / HOST &amp; MANAGER</p>
-        <h1 id="page-title">THE<br><em>SET LIST.</em></h1>
-        <p class="intro-note">Every date. Every set. All in one place.</p>
+        <h1 id="page-title">THE<br><em>SHIFT LIST.</em></h1>
+        <p class="intro-note">Every date. Every shift. All in one place.</p>
       </div>
       <div class="intro-mark" aria-hidden="true"><span>D</span><i></i><span>H</span></div>
     </section>
@@ -46,9 +46,9 @@
       <div class="next-topline"><p class="eyebrow"><span class="live-dot"></span> UP NEXT</p><span class="next-index" id="next-index">01 / OCT</span></div>
       <div class="next-content">
         <div>
-          <p class="next-day" id="next-day">LOADING NEXT SET</p>
+          <p class="next-day" id="next-day">LOADING NEXT SHIFT</p>
           <h2 id="next-heading">DHANDA<span>.</span></h2>
-          <p class="next-subtitle" id="next-subtitle">UPCOMING WORK SET</p>
+          <p class="next-subtitle" id="next-subtitle">UPCOMING WORK SHIFT</p>
         </div>
         <div class="next-time-wrap">
           <span class="next-time-label">START TIME <i>· SLT</i></span>
@@ -56,13 +56,13 @@
           <span class="countdown" id="countdown">CALCULATING</span>
         </div>
       </div>
-      <div class="next-bottom"><span>OCTOBER 2026 SCHEDULE</span><span>LOCAL TIME / SLT <b>↗</b></span></div>
+      <div class="next-bottom"><span>OCTOBER 2026 WORK SCHEDULE</span><span>LOCAL TIME / SLT <b>↗</b></span></div>
     </section>
 
     <section id="calendar" class="calendar-section" aria-labelledby="calendar-title">
       <div class="section-heading">
         <div><p class="eyebrow">01 / THE MONTH</p><h2 id="calendar-title">CALENDAR<span>.</span></h2></div>
-        <p class="section-caption">Select a date to see all scheduled sets.</p>
+        <p class="section-caption">Select a date to see all scheduled shifts.</p>
       </div>
 
       <div class="calendar-toolbar">
@@ -79,8 +79,8 @@
           <div class="weekday-row" aria-hidden="true">
             <span>SUN</span><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span>
           </div>
-          <div class="calendar-grid" id="calendar-grid" role="grid" aria-label="Monthly set calendar"></div>
-          <div class="calendar-legend"><span><i></i> SCHEDULED SET</span><span id="month-total">-- SETS THIS MONTH</span></div>
+          <div class="calendar-grid" id="calendar-grid" role="grid" aria-label="Monthly work schedule"></div>
+          <div class="calendar-legend"><span><i></i> SCHEDULED SHIFT</span><span id="month-total">-- SHIFTS THIS MONTH</span></div>
         </div>
 
         <aside class="day-panel" aria-live="polite" aria-labelledby="selected-date">
@@ -88,10 +88,10 @@
           <h3 id="selected-date">SELECT A DATE</h3>
           <p class="day-count" id="day-count">Choose any day with a red marker.</p>
           <div class="day-events" id="day-events"></div>
-          <p class="panel-note">Set names, venues and durations can be added when available.</p>
+          <p class="panel-note">Shift details, venues and durations can be added when available.</p>
         </aside>
       </div>
-      <p class="calendar-footnote">Times are shown in Pacific Time (SLT). Each listed time marks a scheduled set start.</p>
+      <p class="calendar-footnote">Times are shown in Pacific Time (SLT). Each listed time marks a scheduled shift start.</p>
     </section>
   </main>
 
@@ -107,7 +107,7 @@
       <p class="form-message" id="login-message" role="status"></p>
     </form>
     <form id="add-form" class="admin-form" hidden>
-      <p class="form-intro">ADICIONE UM SET À AGENDA</p>
+      <p class="form-intro">ADICIONE UM HORÁRIO DE TRABALHO À AGENDA</p>
       <label for="add-date">DIA</label><input id="add-date" type="date" required>
       <label for="add-time">HORÁRIO · SLT</label><input id="add-time" type="time" required>
       <button class="primary-action" type="submit">SALVAR HORÁRIO <span>＋</span></button>
@@ -123,6 +123,6 @@
     </form>
   </dialog>
 
-  <footer><span class="wordmark">DHANDA<span>•</span></span><span>SET CALENDAR / 2026</span><a href="#top">BACK TO TOP ↑</a></footer>
+  <footer><span class="wordmark">DHANDA<span>•</span></span><span>HOST &amp; MANAGER / 2026</span><a href="#top">BACK TO TOP ↑</a></footer>
 </body>
 </html>
