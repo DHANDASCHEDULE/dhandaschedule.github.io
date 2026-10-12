@@ -156,3 +156,41 @@ body {
   .intro { flex-direction: column; align-items: stretch; gap: 25px; padding-top: 42px; padding-bottom: 34px; }
   .intro-portrait { width: min(100%, 390px); margin: 0 auto; }
 }
+
+/* Larger calendar and type for easier reading */
+.calendar-section { max-width: 1700px; }
+.calendar-layout { grid-template-columns: minmax(0,1fr) 360px; gap: 20px; }
+.calendar-toolbar h3 { font-size: 13px; }
+.icon-button { width: 40px; height: 40px; }
+.today-button { font-size: 11px; }
+.weekday-row { height: 54px; font-size: 11px; }
+.calendar-grid { grid-auto-rows: minmax(148px,1fr); }
+.date-cell { padding: 16px 14px 12px; }
+.date-number { font-size: 15px; }
+.date-month { font-size: 9px; }
+.set-pips { gap: 8px; margin-top: 15px; }
+.set-pip { font-size: 11px; line-height: 1.45; }
+.calendar-legend { padding: 16px; font-size: 9px; }
+.section-caption { font-size: 13px; }
+.day-panel { min-height: 420px; padding: 32px 28px; }
+.day-panel h3 { font-size: 26px; }
+.day-count { font-size: 10px; }
+.day-event { padding: 16px 0; }
+.event-time { font-size: 12px; }
+.event-label { font-size: 10px; }
+.panel-note, .calendar-footnote { font-size: 9px; }
+@media(max-width:850px) {
+  .calendar-layout { grid-template-columns: 1fr; }
+  .calendar-grid { grid-auto-rows: minmax(128px,1fr); }
+  .day-panel { min-height: auto; }
+}
+@media(max-width:600px) {
+  .weekday-row { height: 40px; font-size: 9px; }
+  .calendar-grid { grid-auto-rows: minmax(110px,1fr); }
+  .date-cell { padding: 11px 8px 9px; }
+  .date-number { font-size: 13px; }
+  .set-pips { gap: 6px; margin-top: 11px; }
+  .set-pip { font-size: 10px; letter-spacing: -.04em; }
+  .set-pip:before { width: 5px; height: 5px; flex-basis: 5px; }
+  .calendar-legend { padding: 14px 10px; font-size: 8px; }
+}
