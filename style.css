@@ -108,3 +108,51 @@ body {
   .admin-nav-button { min-height: 35px; text-align: left; }
   .admin-dialog { padding: 22px; }
 }
+
+/* DHANDA portrait in the host and manager hero */
+.intro-portrait {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  width: clamp(250px, 29vw, 360px);
+  aspect-ratio: 1;
+  margin: 0 3% 0 32px;
+  overflow: hidden;
+  border: 1px solid #78232b;
+  background: #111;
+  box-shadow: 0 0 42px #f02d3724, 0 24px 60px #0008;
+}
+.intro-portrait::after {
+  position: absolute;
+  inset: 42% 0 0;
+  background: linear-gradient(180deg, transparent, #080808d9);
+  content: "";
+  pointer-events: none;
+}
+.intro-portrait img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: transform .55s ease;
+}
+.intro-portrait:hover img { transform: scale(1.035); }
+.intro-portrait figcaption {
+  position: absolute;
+  z-index: 1;
+  right: 16px;
+  bottom: 15px;
+  left: 16px;
+  color: #f5f5f3;
+  font: 9px var(--mono);
+  letter-spacing: .12em;
+}
+.intro-portrait figcaption span { color: var(--red); }
+@media(max-width:850px) {
+  .intro-portrait { width: min(30vw, 260px); margin-right: 0; }
+}
+@media(max-width:600px) {
+  .intro { flex-direction: column; align-items: stretch; gap: 25px; padding-top: 42px; padding-bottom: 34px; }
+  .intro-portrait { width: min(100%, 390px); margin: 0 auto; }
+}
