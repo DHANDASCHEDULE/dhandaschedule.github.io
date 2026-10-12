@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090909">
+  <meta name="description" content="Agenda de sets da DHANDA — calendário de apresentações e próximo set.">
+  <title>DHANDA — Set Calendar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="wordmark" href="#top" aria-label="DHANDA home">DHANDA<span>•</span></a>
+    <div class="topbar-right">
+      <span class="timezone"><i></i> PACIFIC TIME / SLT</span>
+      <a class="nav-calendar" href="#calendar">CALENDAR <span>↘</span></a>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="intro" aria-labelledby="page-title">
+      <div class="intro-copy">
+        <p class="eyebrow"><span>DHANDA</span> / DJ SCHEDULE</p>
+        <h1 id="page-title">THE<br><em>SET LIST.</em></h1>
+        <p class="intro-note">Every date. Every set. All in one place.</p>
+      </div>
+      <div class="intro-mark" aria-hidden="true"><span>D</span><i></i><span>H</span></div>
+    </section>
+
+    <section class="next-set" aria-labelledby="next-heading">
+      <div class="next-topline"><p class="eyebrow"><span class="live-dot"></span> UP NEXT</p><span class="next-index" id="next-index">01 / OCT</span></div>
+      <div class="next-content">
+        <div>
+          <p class="next-day" id="next-day">LOADING NEXT SET</p>
+          <h2 id="next-heading">DHANDA<span>.</span></h2>
+          <p class="next-subtitle" id="next-subtitle">UPCOMING WORK SET</p>
+        </div>
+        <div class="next-time-wrap">
+          <span class="next-time-label">START TIME <i>· SLT</i></span>
+          <time class="next-time" id="next-time">--:--</time>
+          <span class="countdown" id="countdown">CALCULATING</span>
+        </div>
+      </div>
+      <div class="next-bottom"><span>OCTOBER 2026 SCHEDULE</span><span>LOCAL TIME / SLT <b>↗</b></span></div>
+    </section>
+
+    <section id="calendar" class="calendar-section" aria-labelledby="calendar-title">
+      <div class="section-heading">
+        <div><p class="eyebrow">01 / THE MONTH</p><h2 id="calendar-title">CALENDAR<span>.</span></h2></div>
+        <p class="section-caption">Select a date to see all scheduled sets.</p>
+      </div>
+
+      <div class="calendar-toolbar">
+        <div class="month-controls">
+          <button class="icon-button" id="previous-month" type="button" aria-label="Previous month">←</button>
+          <h3 id="month-label" aria-live="polite">OCTOBER 2026</h3>
+          <button class="icon-button" id="next-month" type="button" aria-label="Next month">→</button>
+        </div>
+        <button class="today-button" id="today-button" type="button">TODAY <span>↗</span></button>
+      </div>
+
+      <div class="calendar-layout">
+        <div class="calendar-card">
+          <div class="weekday-row" aria-hidden="true">
+            <span>SUN</span><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span>
+          </div>
+          <div class="calendar-grid" id="calendar-grid" role="grid" aria-label="Monthly set calendar"></div>
+          <div class="calendar-legend"><span><i></i> SCHEDULED SET</span><span id="month-total">-- SETS THIS MONTH</span></div>
+        </div>
+
+        <aside class="day-panel" aria-live="polite" aria-labelledby="selected-date">
+          <p class="eyebrow">DAY VIEW</p>
+          <h3 id="selected-date">SELECT A DATE</h3>
+          <p class="day-count" id="day-count">Choose any day with a red marker.</p>
+          <div class="day-events" id="day-events"></div>
+          <p class="panel-note">Set names, venues and durations can be added when available.</p>
+        </aside>
+      </div>
+      <p class="calendar-footnote">Times are shown in Pacific Time (SLT). Each listed time marks a scheduled set start.</p>
+    </section>
+  </main>
+
+  <footer><span class="wordmark">DHANDA<span>•</span></span><span>SET CALENDAR / 2026</span><a href="#top">BACK TO TOP ↑</a></footer>
+</body>
+</html>
