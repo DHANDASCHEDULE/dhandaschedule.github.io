@@ -16,9 +16,12 @@ create table if not exists public.booking_inquiries (
   id uuid primary key default gen_random_uuid(),
   club_name text not null check (char_length(trim(club_name)) between 2 and 120),
   contact_name text not null check (char_length(trim(contact_name)) between 2 and 120),
-  contact_email text not null check (char_length(trim(contact_email)) between 5 and 320),
+  contact_email text check (contact_email is null or char_length(trim(contact_email)) between 5 and 320),
+  discord_handle text not null default '',
+  landmark text not null default '',
   requested_date date not null,
   requested_time time without time zone not null,
+  requested_end_time time without time zone,
   message text not null default '' check (char_length(message) <= 1500),
   status text not null default 'pending' check (status in ('pending', 'accepted', 'declined')),
   created_at timestamptz not null default now()
@@ -33,7 +36,8 @@ create index if not exists booking_inquiries_status_idx
 alter table public.booking_inquiries enable row level security;
 
 revoke all on public.booking_inquiries from anon, authenticated;
-grant insert (club_name, contact_name, contact_email, requested_date, requested_time, message)
+grant insert (club_name, contact_name, contact_email, discord_handle, landmark,
+  requested_date, requested_time, requested_end_time, message)
   on public.booking_inquiries to anon, authenticated;
 grant select, update on public.booking_inquiries to authenticated;
 

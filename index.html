@@ -9,9 +9,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261017-party-flyers">
+  <link rel="stylesheet" href="style.css?v=20261017-time-ranges">
   <script src="supabase-config.js?v=20261012-admin"></script>
-  <script type="module" src="script.js?v=20261017-party-flyers"></script>
+  <script type="module" src="script.js?v=20261017-time-ranges"></script>
 </head>
 <body>
   <header class="topbar">
@@ -68,7 +68,7 @@
     <section id="calendar" class="calendar-section" aria-labelledby="calendar-title">
       <div class="section-heading">
         <div><p class="eyebrow">01 / THE MONTH</p><h2 id="calendar-title">CALENDAR<span>.</span></h2></div>
-        <p class="section-caption">Check available slots or request your preferred date and time.</p>
+        <p class="section-caption">Review availability blocks or send a booking request for your preferred time range.</p>
       </div>
 
       <div class="calendar-toolbar">
@@ -94,10 +94,10 @@
           <h3 id="selected-date">SELECT A DATE</h3>
           <p class="day-count" id="day-count">Choose a date to review its availability.</p>
           <div class="day-events" id="day-events"></div>
-          <p class="panel-note">Each entry is a time slot without a set end time. Use BOOK DHANDA to request a date.</p>
+          <p class="panel-note">Availability is shown as a start and end time. Use BOOK to request a listed period.</p>
         </aside>
       </div>
-      <p class="calendar-footnote">Times are shown in Pacific Time (SLT). Each entry is a time slot; no end time is set yet.</p>
+      <p class="calendar-footnote">Times are shown in Pacific Time (SLT). Entries show the full availability period when an end time is set.</p>
     </section>
 
     <section id="party-flyers" class="flyer-section" aria-labelledby="flyers-title">
@@ -174,9 +174,10 @@
       <p class="form-message" id="login-message" role="status"></p>
     </form>
     <form id="add-form" class="admin-form" hidden>
-      <p class="form-intro">ADICIONE OU EDITE UM HORÁRIO NA AGENDA</p>
+      <p class="form-intro">ADICIONE OU EDITE UM PERÍODO DE DISPONIBILIDADE NA AGENDA</p>
       <label for="add-date">DIA</label><input id="add-date" type="date" required>
-      <label for="add-time">HORÁRIO · SLT</label><input id="add-time" type="time" required>
+      <label for="add-time">HORÁRIO DE · SLT</label><input id="add-time" type="time" required>
+      <label for="add-end-time">HORÁRIO ATÉ · SLT</label><input id="add-end-time" type="time" required>
       <label for="schedule-status">STATUS PÚBLICO</label>
       <select id="schedule-status" required>
         <option value="available">DISPONÍVEL PARA BOOKING</option>
@@ -199,19 +200,21 @@
   <dialog class="admin-dialog booking-dialog" id="booking-dialog" aria-labelledby="booking-dialog-title">
     <div class="dialog-topline"><p class="eyebrow">DHANDA / BOOKING INQUIRY</p><button class="dialog-close" id="booking-close" type="button" aria-label="Close booking form">×</button></div>
     <h2 id="booking-dialog-title">BOOK DHANDA<span>.</span></h2>
-    <p class="form-intro">Request professional hosting or invite DHANDA to host your party or special event.</p>
+    <p class="form-intro">Send your SL nickname, Discord, club, landmark, and preferred date and time range. You can also request a party or special event.</p>
     <form id="booking-form" class="admin-form">
       <label for="booking-type">REQUEST TYPE</label>
       <select id="booking-type" required>
         <option value="host">HOST BOOKING · CLUB / DJ / SINGER</option>
         <option value="party">PARTY / SPECIAL EVENT</option>
       </select>
-      <label for="club-name">CLUB / ORGANIZATION</label><input id="club-name" maxlength="120" required>
-      <label for="contact-name">YOUR NAME</label><input id="contact-name" maxlength="120" required>
-      <label for="contact-email">CONTACT EMAIL</label><input id="contact-email" type="email" maxlength="320" required>
+      <label for="sl-nick">SECOND LIFE NICKNAME</label><input id="sl-nick" maxlength="120" required placeholder="Your in-world name">
+      <label for="discord-handle">DISCORD</label><input id="discord-handle" maxlength="120" required placeholder="Username or server contact">
+      <label for="club-name">CLUB NAME</label><input id="club-name" maxlength="120" required>
+      <label for="landmark">LANDMARK / LOCATION</label><input id="landmark" maxlength="300" required placeholder="Second Life landmark or venue location">
       <label for="requested-date">PREFERRED DATE</label><input id="requested-date" type="date" required>
-      <label for="requested-time">PREFERRED TIME · SLT</label><input id="requested-time" type="time" required>
-      <label for="booking-message">EVENT DETAILS <span class="optional-label">OPTIONAL</span></label><textarea id="booking-message" maxlength="1100" rows="3" placeholder="Tell DHANDA about the booking."></textarea>
+      <label for="requested-time">FROM · SLT</label><input id="requested-time" type="time" required>
+      <label for="requested-end-time">UNTIL · SLT</label><input id="requested-end-time" type="time" required>
+      <label for="booking-message">MESSAGE <span class="optional-label">OPTIONAL</span></label><textarea id="booking-message" maxlength="1100" rows="3" placeholder="Tell DHANDA about the booking."></textarea>
       <div class="honeypot" aria-hidden="true"><label for="booking-website">Website</label><input id="booking-website" name="website" tabindex="-1" autocomplete="off"></div>
       <button class="primary-action" type="submit">SEND BOOKING REQUEST <span>↗</span></button>
       <p class="form-message" id="booking-message-status" role="status"></p>

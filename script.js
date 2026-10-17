@@ -205,7 +205,12 @@ function entriesForDate(date) {
 }
 
 function setScheduleFromEntries(entries) {
-  scheduleEntries = entries.map(entry => ({ ...entry, start_time: String(entry.start_time).slice(0, 5), status: entry.status || "reserved" }));
+  scheduleEntries = entries.map(entry => ({
+    ...entry,
+    start_time: String(entry.start_time).slice(0, 5),
+    end_time: entry.end_time ? String(entry.end_time).slice(0, 5) : null,
+    status: entry.status || "reserved"
+  }));
   schedule = {};
   for (const entry of scheduleEntries) (schedule[entry.event_date] ||= []).push(entry.start_time);
 }
@@ -217,6 +222,15 @@ function statusLabel(status) {
 function timeLabel(time) {
   const [hour, minute] = time.split(":").map(Number);
   return `${hour % 12 || 12}:${String(minute).padStart(2, "0")} ${hour >= 12 ? "PM" : "AM"}`;
+}
+
+function timeToMinutes(time) {
+  const [hour, minute] = time.split(":").map(Number);
+  return hour * 60 + minute;
+}
+
+function timeRangeLabel(entry) {
+  return entry.end_time ? `${timeLabel(entry.start_time)} – ${timeLabel(entry.end_time)}` : timeLabel(entry.start_time);
 }
 
 function humanDate(key, options = { weekday: "long", month: "long", day: "numeric" }) {
@@ -241,7 +255,7 @@ function setNext() {
   const nowKey = `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
   const next = scheduleEntries
     .filter(entry => entry.status === "available")
-    .map(entry => ({ date: entry.event_date, time: entry.start_time, stamp: `${entry.event_date}T${entry.start_time}` }))
+    .map(entry => ({ date: entry.event_date, time: entry.start_time, end: entry.end_time, stamp: `${entry.event_date}T${entry.start_time}` }))
     .sort((a, b) => a.stamp.localeCompare(b.stamp))
     .find(slot => slot.stamp > nowKey);
   const heading = document.querySelector("#next-day");
@@ -258,7 +272,7 @@ function setNext() {
     return;
   }
   heading.textContent = humanDate(next.date).toUpperCase();
-  time.textContent = timeLabel(next.time);
+  time.textContent = next.end ? `${timeLabel(next.time)} – ${timeLabel(next.end)}` : timeLabel(next.time);
   index.textContent = `01 / ${new Intl.DateTimeFormat("en-US", { month: "short", timeZone: PACIFIC }).format(new Date(`${next.date}T12:00:00-07:00`)).toUpperCase()}`;
   subtitle.textContent = "AVAILABLE FOR BOOKING";
   const remaining = Math.max(0, pacificInstant(next.date, next.time).getTime() - Date.now());
@@ -272,14 +286,14 @@ function setNext() {
 function showSelectedDay() {
   const entries = entriesForDate(selectedDate);
   dayTitle.textContent = humanDate(selectedDate, { weekday: "long", month: "long", day: "numeric" }).toUpperCase();
-  dayCount.textContent = entries.length ? `${entries.length} TIME ${entries.length === 1 ? "SLOT" : "SLOTS"} · ${entries.filter(entry => entry.status === "available").length} AVAILABLE` : "No time slots posted. Send your preferred time to ask about availability.";
+  dayCount.textContent = entries.length ? `${entries.length} TIME ${entries.length === 1 ? "BLOCK" : "BLOCKS"} · ${entries.filter(entry => entry.status === "available").length} AVAILABLE` : "No time slots posted. Send your preferred time to ask about availability.";
   dayEvents.replaceChildren();
   entries.forEach(entry => {
     const row = document.createElement("div");
     row.className = "day-event";
     const clock = document.createElement("time");
     clock.className = "event-time";
-    clock.textContent = timeLabel(entry.start_time);
+    clock.textContent = timeRangeLabel(entry);
     const status = document.createElement("span");
     status.className = `slot-status status-${entry.status}`;
     status.textContent = statusLabel(entry.status);
@@ -289,7 +303,7 @@ function showSelectedDay() {
       request.type = "button";
       request.className = "slot-book";
       request.textContent = "BOOK";
-      request.addEventListener("click", () => openBookingDialog(selectedDate, entry.start_time));
+      request.addEventListener("click", () => openBookingDialog(selectedDate, entry.start_time, entry.end_time));
       row.append(request);
     }
     if (isDhandaSignedIn && entry.id) {
@@ -343,7 +357,7 @@ function renderCalendar() {
     entries.slice(0, 3).forEach(entry => {
       const pip = document.createElement("span");
       pip.className = `set-pip is-${entry.status}`;
-      pip.textContent = timeLabel(entry.start_time);
+      pip.textContent = timeRangeLabel(entry);
       pips.append(pip);
     });
     if (entries.length > 3) {
@@ -382,7 +396,7 @@ async function loadRemoteSchedule() {
   try {
     const client = await connectSupabase();
     if (!client) return;
-    const { data, error } = await client.from("schedule_events").select("id,event_date,start_time,status").order("event_date").order("start_time");
+    const { data, error } = await client.from("schedule_events").select("id,event_date,start_time,end_time,status").order("event_date").order("start_time");
     if (error) throw error;
     setScheduleFromEntries(data);
     renderCalendar();
@@ -447,19 +461,34 @@ async function saveScheduleEntry(event) {
   const message = document.querySelector("#add-message");
   const date = document.querySelector("#add-date").value;
   const time = document.querySelector("#add-time").value;
+  const endTime = document.querySelector("#add-end-time").value;
   const status = document.querySelector("#schedule-status").value;
+  if (timeToMinutes(endTime) <= timeToMinutes(time)) {
+    setMessage(message, "O horário ATÉ precisa ser depois do horário DE, no mesmo dia.", true);
+    return;
+  }
   try {
     const client = await connectSupabase();
     if (!client || !authReady || !isDhandaSignedIn) throw new Error("Admin access is not configured.");
-    let lookup = client.from("schedule_events").select("id").eq("event_date", date).eq("start_time", `${time}:00`);
-    if (editingScheduleId) lookup = lookup.neq("id", editingScheduleId);
-    const { data: duplicate, error: lookupError } = await lookup.limit(1);
+    const { data: sameDayEntries, error: lookupError } = await client.from("schedule_events")
+      .select("id,start_time,end_time").eq("event_date", date);
     if (lookupError) throw lookupError;
-    if (duplicate.length) {
-      setMessage(message, "Esse horário já está cadastrado nesse dia.", true);
+    const startMinute = timeToMinutes(time);
+    const endMinute = timeToMinutes(endTime);
+    const overlaps = sameDayEntries.some(entry => {
+      if (editingScheduleId && entry.id === editingScheduleId) return false;
+      const existingStart = String(entry.start_time).slice(0, 5);
+      const existingStartMinute = timeToMinutes(existingStart);
+      const existingEndMinute = entry.end_time
+        ? timeToMinutes(String(entry.end_time).slice(0, 5))
+        : Math.min(24 * 60, existingStartMinute + 1);
+      return startMinute < existingEndMinute && existingStartMinute < endMinute;
+    });
+    if (overlaps) {
+      setMessage(message, "Esse intervalo se sobrepõe a outro horário cadastrado nesse dia.", true);
       return;
     }
-    const values = { event_date: date, start_time: `${time}:00`, status };
+    const values = { event_date: date, start_time: `${time}:00`, end_time: `${endTime}:00`, status };
     const { error } = editingScheduleId
       ? await client.from("schedule_events").update(values).eq("id", editingScheduleId)
       : await client.from("schedule_events").insert(values);
@@ -478,6 +507,7 @@ function openEditSlot(entry) {
   editingScheduleId = entry.id;
   document.querySelector("#add-date").value = entry.event_date;
   document.querySelector("#add-time").value = entry.start_time;
+  document.querySelector("#add-end-time").value = entry.end_time || "";
   document.querySelector("#schedule-status").value = entry.status;
   setMessage(document.querySelector("#add-message"), "");
   showAdminForm(addForm);
@@ -516,18 +546,30 @@ function renderBookingRequests(requests) {
 
     const contact = document.createElement("p");
     contact.className = "request-contact";
-    contact.textContent = request.contact_name;
-    const email = document.createElement("a");
-    email.className = "request-email";
-    email.href = `mailto:${request.contact_email}`;
-    email.textContent = request.contact_email;
+    contact.textContent = `SL: ${request.contact_name}`;
+    const discord = document.createElement("p");
+    discord.className = "request-contact";
+    discord.textContent = `DISCORD: ${request.discord_handle || "Not provided"}`;
+    const landmark = document.createElement("p");
+    landmark.className = "request-contact";
+    landmark.textContent = `LANDMARK: ${request.landmark || "Not provided"}`;
+    const email = request.contact_email ? document.createElement("a") : null;
+    if (email) {
+      email.className = "request-email";
+      email.href = `mailto:${request.contact_email}`;
+      email.textContent = request.contact_email;
+    }
     const when = document.createElement("p");
     when.className = "request-when";
-    when.textContent = `${humanDate(request.requested_date, { weekday: "long", month: "long", day: "numeric", year: "numeric" })} · ${timeLabel(String(request.requested_time).slice(0, 5))} SLT`;
+    const startLabel = timeLabel(String(request.requested_time).slice(0, 5));
+    const endLabel = request.requested_end_time ? ` – ${timeLabel(String(request.requested_end_time).slice(0, 5))}` : "";
+    when.textContent = `${humanDate(request.requested_date, { weekday: "long", month: "long", day: "numeric", year: "numeric" })} · ${startLabel}${endLabel} SLT`;
     const message = document.createElement("p");
     message.className = "request-message";
     message.textContent = requestMessage || "No additional event details.";
-    card.append(header, kind, contact, email, when, message);
+    card.append(header, kind, contact, discord, landmark);
+    if (email) card.append(email);
+    card.append(when, message);
 
     const actions = document.createElement("div");
     actions.className = "request-actions";
@@ -560,7 +602,7 @@ async function loadBookingRequests() {
   const list = document.querySelector("#booking-request-list");
   try {
     const { data, error } = await supabaseClient.from("booking_inquiries")
-      .select("id,club_name,contact_name,contact_email,requested_date,requested_time,message,status,created_at")
+      .select("id,club_name,contact_name,contact_email,discord_handle,landmark,requested_date,requested_time,requested_end_time,message,status,created_at")
       .order("created_at", { ascending: false });
     if (error) throw error;
     document.querySelector("#request-count").textContent = String(data.filter(request => request.status === "pending").length);
@@ -619,14 +661,23 @@ async function submitBookingInquiry(event) {
   try {
     const client = await connectSupabase();
     if (!client) throw new Error("Booking is not configured.");
+    const startTime = document.querySelector("#requested-time").value;
+    const endTime = document.querySelector("#requested-end-time").value;
+    if (timeToMinutes(endTime) <= timeToMinutes(startTime)) {
+      setMessage(message, "The UNTIL time must be after the FROM time on the same day.", true);
+      return;
+    }
     const requestType = document.querySelector("#booking-type").value === "party" ? "Party / special event" : "Host booking";
     const details = document.querySelector("#booking-message").value.trim();
     const { error } = await client.from("booking_inquiries").insert({
       club_name: document.querySelector("#club-name").value.trim(),
-      contact_name: document.querySelector("#contact-name").value.trim(),
-      contact_email: document.querySelector("#contact-email").value.trim(),
+      contact_name: document.querySelector("#sl-nick").value.trim(),
+      contact_email: null,
+      discord_handle: document.querySelector("#discord-handle").value.trim(),
+      landmark: document.querySelector("#landmark").value.trim(),
       requested_date: document.querySelector("#requested-date").value,
-      requested_time: `${document.querySelector("#requested-time").value}:00`,
+      requested_time: `${startTime}:00`,
+      requested_end_time: `${endTime}:00`,
       message: `Request type: ${requestType}\n---\n${details}`
     });
     if (error) throw error;
@@ -637,11 +688,12 @@ async function submitBookingInquiry(event) {
   }
 }
 
-function openBookingDialog(date = "", time = "") {
+function openBookingDialog(date = "", time = "", endTime = "") {
   const today = dateParts(new Date());
   document.querySelector("#requested-date").min = `${today.year}-${today.month}-${today.day}`;
   document.querySelector("#requested-date").value = date;
   document.querySelector("#requested-time").value = time;
+  document.querySelector("#requested-end-time").value = endTime || "";
   document.querySelector("#booking-type").value = "host";
   document.querySelector("#booking-message").placeholder = "Tell DHANDA about the booking.";
   setMessage(document.querySelector("#booking-message-status"), "");
@@ -652,7 +704,9 @@ function refreshRemoveTimes() {
   const date = document.querySelector("#remove-date").value;
   const select = document.querySelector("#remove-time");
   select.replaceChildren(new Option("DIA INTEIRO", ""));
-  [...new Set(schedule[date] || [])].sort().forEach(time => select.add(new Option(timeLabel(time), time)));
+  const entries = entriesForDate(date);
+  const uniqueEntries = new Map(entries.map(entry => [entry.start_time, entry]));
+  [...uniqueEntries.values()].forEach(entry => select.add(new Option(timeRangeLabel(entry), entry.start_time)));
 }
 
 async function removeScheduledSet(event) {
@@ -660,7 +714,8 @@ async function removeScheduledSet(event) {
   const message = document.querySelector("#remove-message");
   const date = document.querySelector("#remove-date").value;
   const time = document.querySelector("#remove-time").value;
-  const confirmText = time ? `Remover o horário ${timeLabel(time)} de ${humanDate(date)}?` : `Remover todos os horários de ${humanDate(date)}?`;
+  const selectedEntry = entriesForDate(date).find(entry => entry.start_time === time);
+  const confirmText = time ? `Remover o horário ${selectedEntry ? timeRangeLabel(selectedEntry) : timeLabel(time)} de ${humanDate(date)}?` : `Remover todos os horários de ${humanDate(date)}?`;
   if (!window.confirm(confirmText)) return;
   try {
     const client = await connectSupabase();
@@ -699,6 +754,7 @@ document.querySelector("#add-open").addEventListener("click", () => {
   editingScheduleId = null;
   document.querySelector("#add-date").value = selectedDate;
   document.querySelector("#add-time").value = "";
+  document.querySelector("#add-end-time").value = "";
   document.querySelector("#schedule-status").value = "available";
   setMessage(document.querySelector("#add-message"), "");
   showAdminForm(addForm);

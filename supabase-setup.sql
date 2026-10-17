@@ -5,6 +5,7 @@ create table if not exists public.schedule_events (
   id uuid primary key default gen_random_uuid(),
   event_date date not null,
   start_time time without time zone not null,
+  end_time time without time zone,
   created_at timestamptz not null default now()
 );
 
