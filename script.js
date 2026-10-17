@@ -355,6 +355,10 @@ function renderBookingRequests(requests) {
   }
 
   for (const request of requests) {
+    const storedMessage = request.message || "";
+    const metaMatch = storedMessage.match(/^Request type: (Host booking|Party \/ special event)\n---\n([\s\S]*)$/);
+    const requestType = metaMatch?.[1] || "Host booking";
+    const requestMessage = metaMatch ? metaMatch[2] : storedMessage;
     const card = document.createElement("article");
     card.className = "request-card";
     const header = document.createElement("div");
@@ -365,6 +369,10 @@ function renderBookingRequests(requests) {
     state.className = `request-state request-${request.status}`;
     state.textContent = request.status.toUpperCase();
     header.append(club, state);
+
+    const kind = document.createElement("p");
+    kind.className = `request-kind${requestType === "Party / special event" ? " request-kind-party" : ""}`;
+    kind.textContent = requestType === "Party / special event" ? "PARTY / SPECIAL EVENT" : "HOST BOOKING · CLUB / DJ / SINGER";
 
     const contact = document.createElement("p");
     contact.className = "request-contact";
@@ -378,12 +386,12 @@ function renderBookingRequests(requests) {
     when.textContent = `${humanDate(request.requested_date, { weekday: "long", month: "long", day: "numeric", year: "numeric" })} · ${timeLabel(String(request.requested_time).slice(0, 5))} SLT`;
     const message = document.createElement("p");
     message.className = "request-message";
-    message.textContent = request.message || "No additional message.";
-    card.append(header, contact, email, when, message);
+    message.textContent = requestMessage || "No additional event details.";
+    card.append(header, kind, contact, email, when, message);
 
+    const actions = document.createElement("div");
+    actions.className = "request-actions";
     if (request.status === "pending") {
-      const actions = document.createElement("div");
-      actions.className = "request-actions";
       const accept = document.createElement("button");
       accept.type = "button";
       accept.className = "request-accept";
@@ -395,8 +403,14 @@ function renderBookingRequests(requests) {
       decline.textContent = "RECUSAR";
       decline.addEventListener("click", () => decideBookingRequest(request.id, "declined", decline));
       actions.append(accept, decline);
-      card.append(actions);
     }
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "request-delete";
+    remove.textContent = "APAGAR MENSAGEM";
+    remove.addEventListener("click", () => deleteBookingRequest(request.id, remove));
+    actions.append(remove);
+    card.append(actions);
     list.append(card);
   }
 }
@@ -440,6 +454,20 @@ async function decideBookingRequest(requestId, decision, button) {
   }
 }
 
+async function deleteBookingRequest(requestId, button) {
+  if (!isDhandaSignedIn || !supabaseClient) return;
+  if (!window.confirm("Apagar esta solicitação? A mensagem será excluída, mas um horário já aceito continuará reservado na agenda.")) return;
+  button.disabled = true;
+  try {
+    const { error } = await supabaseClient.from("booking_inquiries").delete().eq("id", requestId);
+    if (error) throw error;
+    await loadBookingRequests();
+  } catch (error) {
+    button.disabled = false;
+    window.alert("Não foi possível apagar a mensagem. Confirme se a atualização de permissões de exclusão foi executada no Supabase.");
+  }
+}
+
 async function submitBookingInquiry(event) {
   event.preventDefault();
   const message = document.querySelector("#booking-message-status");
@@ -451,13 +479,15 @@ async function submitBookingInquiry(event) {
   try {
     const client = await connectSupabase();
     if (!client) throw new Error("Booking is not configured.");
+    const requestType = document.querySelector("#booking-type").value === "party" ? "Party / special event" : "Host booking";
+    const details = document.querySelector("#booking-message").value.trim();
     const { error } = await client.from("booking_inquiries").insert({
       club_name: document.querySelector("#club-name").value.trim(),
       contact_name: document.querySelector("#contact-name").value.trim(),
       contact_email: document.querySelector("#contact-email").value.trim(),
       requested_date: document.querySelector("#requested-date").value,
       requested_time: `${document.querySelector("#requested-time").value}:00`,
-      message: document.querySelector("#booking-message").value.trim()
+      message: `Request type: ${requestType}\n---\n${details}`
     });
     if (error) throw error;
     bookingForm.reset();
@@ -472,6 +502,8 @@ function openBookingDialog(date = "", time = "") {
   document.querySelector("#requested-date").min = `${today.year}-${today.month}-${today.day}`;
   document.querySelector("#requested-date").value = date;
   document.querySelector("#requested-time").value = time;
+  document.querySelector("#booking-type").value = "host";
+  document.querySelector("#booking-message").placeholder = "Tell DHANDA about the booking.";
   setMessage(document.querySelector("#booking-message-status"), "");
   bookingDialog.showModal();
 }
@@ -555,6 +587,11 @@ document.querySelector("#add-form").addEventListener("submit", saveScheduleEntry
 document.querySelector("#remove-form").addEventListener("submit", removeScheduledSet);
 document.querySelector("#remove-date").addEventListener("change", refreshRemoveTimes);
 bookingForm.addEventListener("submit", submitBookingInquiry);
+document.querySelector("#booking-type").addEventListener("change", event => {
+  document.querySelector("#booking-message").placeholder = event.target.value === "party"
+    ? "Share the party name, occasion, and any details DHANDA should know."
+    : "Tell DHANDA about the booking.";
+});
 
 document.querySelector("#remove-form").addEventListener("reset", refreshRemoveTimes);
 adminDialog.addEventListener("click", event => { if (event.target === adminDialog) adminDialog.close(); });

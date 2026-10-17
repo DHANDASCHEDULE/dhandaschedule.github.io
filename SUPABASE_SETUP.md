@@ -28,4 +28,8 @@ For an already configured project, run `supabase-booking-upgrade.sql` once in th
 
 The schedule stores one date and start time per slot. It does not store an end time or duration yet. The calendar only shows explicit available slots as available; clubs can still submit a preferred date and time for DHANDA to review.
 
+## Upgrade: party requests and delete controls
+
+The public booking form includes a request type for regular host bookings or parties/special events. The selected type is saved with the inquiry so DHANDA can identify it in her private inbox. To enable the inbox's **APAGAR MENSAGEM** action, run `supabase-booking-delete-upgrade.sql` once in the Supabase SQL Editor. Row Level Security limits inquiry deletion to the DHANDA account. Removing an accepted inquiry only removes its message; its reserved calendar slot stays in place.
+
 O site mantém a agenda inicial visível enquanto o Supabase não estiver configurado. Não publique a integração como pronta antes de preencher a configuração, executar o SQL e importar a agenda inicial.

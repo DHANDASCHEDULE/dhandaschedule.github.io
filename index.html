@@ -9,9 +9,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261016-about-services">
+  <link rel="stylesheet" href="style.css?v=20261017-party-inbox">
   <script src="supabase-config.js?v=20261012-admin"></script>
-  <script type="module" src="script.js?v=20261012-booking-system"></script>
+  <script type="module" src="script.js?v=20261017-party-inbox"></script>
 </head>
 <body>
   <header class="topbar">
@@ -188,14 +188,19 @@
   <dialog class="admin-dialog booking-dialog" id="booking-dialog" aria-labelledby="booking-dialog-title">
     <div class="dialog-topline"><p class="eyebrow">DHANDA / BOOKING INQUIRY</p><button class="dialog-close" id="booking-close" type="button" aria-label="Close booking form">×</button></div>
     <h2 id="booking-dialog-title">BOOK DHANDA<span>.</span></h2>
-    <p class="form-intro">Send your club, preferred date and time. DHANDA will review your request.</p>
+    <p class="form-intro">Request professional hosting or invite DHANDA to host your party or special event.</p>
     <form id="booking-form" class="admin-form">
+      <label for="booking-type">REQUEST TYPE</label>
+      <select id="booking-type" required>
+        <option value="host">HOST BOOKING · CLUB / DJ / SINGER</option>
+        <option value="party">PARTY / SPECIAL EVENT</option>
+      </select>
       <label for="club-name">CLUB / ORGANIZATION</label><input id="club-name" maxlength="120" required>
       <label for="contact-name">YOUR NAME</label><input id="contact-name" maxlength="120" required>
       <label for="contact-email">CONTACT EMAIL</label><input id="contact-email" type="email" maxlength="320" required>
       <label for="requested-date">PREFERRED DATE</label><input id="requested-date" type="date" required>
       <label for="requested-time">PREFERRED TIME · SLT</label><input id="requested-time" type="time" required>
-      <label for="booking-message">MESSAGE <span class="optional-label">OPTIONAL</span></label><textarea id="booking-message" maxlength="1500" rows="3" placeholder="Tell DHANDA about the booking."></textarea>
+      <label for="booking-message">EVENT DETAILS <span class="optional-label">OPTIONAL</span></label><textarea id="booking-message" maxlength="1100" rows="3" placeholder="Tell DHANDA about the booking."></textarea>
       <div class="honeypot" aria-hidden="true"><label for="booking-website">Website</label><input id="booking-website" name="website" tabindex="-1" autocomplete="off"></div>
       <button class="primary-action" type="submit">SEND BOOKING REQUEST <span>↗</span></button>
       <p class="form-message" id="booking-message-status" role="status"></p>
@@ -205,7 +210,7 @@
   <dialog class="admin-dialog request-dialog" id="booking-requests-dialog" aria-labelledby="requests-title">
     <div class="dialog-topline"><p class="eyebrow">DHANDA / PRIVATE INBOX</p><button class="dialog-close" id="requests-close" type="button" aria-label="Close requests">×</button></div>
     <h2 id="requests-title">BOOKING<span>.</span></h2>
-    <p class="form-intro">Only DHANDA can view and manage these inquiries.</p>
+    <p class="form-intro">Only DHANDA can view and manage these inquiries. Deleting removes the message; it does not change an accepted calendar slot.</p>
     <div class="request-list" id="booking-request-list" aria-live="polite"><p class="request-empty">Loading requests…</p></div>
   </dialog>
 
