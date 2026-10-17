@@ -48,6 +48,8 @@ let supabaseClient = null;
 let authReady = false;
 let isDhandaSignedIn = false;
 let editingScheduleId = null;
+let editingFlyerId = null;
+let flyerRecords = [];
 
 const monthLabel = document.querySelector("#month-label");
 const calendarGrid = document.querySelector("#calendar-grid");
@@ -70,51 +72,46 @@ function displayFlyerDate(value) {
     .format(new Date(Date.UTC(year, month - 1, day, 12)));
 }
 
-function displayFlyerTitle(slug) {
-  return slug.replace(/-/g, " ").replace(/\b\w/g, letter => letter.toUpperCase());
-}
-
 async function loadPartyFlyers() {
   const grid = document.querySelector("#flyer-grid");
   if (!grid) return;
   try {
     const client = await connectSupabase();
     if (!client) throw new Error("Supabase is not configured");
-    const { data, error } = await client.storage.from(FLYER_BUCKET).list("", {
-      limit: 100,
-      sortBy: { column: "created_at", order: "desc" }
-    });
+    let query = client.from("party_flyers").select("id,title,event_date,venue,landmark,description,object_path,is_published,sort_order,created_at");
+    if (!isDhandaSignedIn) query = query.eq("is_published", true);
+    const { data, error } = await query.order("sort_order").order("event_date");
     if (error) throw error;
     const todayParts = dateParts(new Date());
     const todayKey = `${todayParts.year}-${todayParts.month}-${todayParts.day}`;
-    const flyers = (data || []).map(file => {
-      const [date, slug, filename] = file.name.split("__");
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(date || "") || !slug || !filename) return null;
-      const { data: publicFile } = client.storage.from(FLYER_BUCKET).getPublicUrl(file.name);
-      return { ...file, date, title: displayFlyerTitle(slug), url: publicFile.publicUrl };
+    const flyers = (data || []).map(flyer => {
+      const { data: publicFile } = client.storage.from(FLYER_BUCKET).getPublicUrl(flyer.object_path);
+      return { ...flyer, url: publicFile.publicUrl };
     }).filter(Boolean).sort((a, b) => {
-      const aIsPast = a.date < todayKey;
-      const bIsPast = b.date < todayKey;
+      const aIsPast = a.event_date < todayKey;
+      const bIsPast = b.event_date < todayKey;
       if (aIsPast !== bIsPast) return aIsPast ? 1 : -1;
-      return aIsPast ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date);
+      return a.sort_order - b.sort_order || (aIsPast ? b.event_date.localeCompare(a.event_date) : a.event_date.localeCompare(b.event_date));
     });
+    flyerRecords = isDhandaSignedIn ? (data || []) : [];
+    refreshDashboard();
     grid.replaceChildren();
     if (!flyers.length) {
       const empty = document.createElement("p");
       empty.className = "flyer-empty";
-      empty.textContent = "No event flyers published yet.";
+      empty.textContent = isDhandaSignedIn ? "Nenhum flyer ainda. Publique um novo ou salve como rascunho." : "No event flyers published yet.";
       grid.append(empty);
       return;
     }
     for (const flyer of flyers) {
       const card = document.createElement("article");
-      card.className = "flyer-card";
+      card.className = `flyer-card${isDhandaSignedIn && !flyer.is_published ? " flyer-is-draft" : ""}`;
       const link = document.createElement("a");
       link.className = "flyer-image-link";
       link.href = flyer.url;
       link.target = "_blank";
       link.rel = "noopener noreferrer";
-      link.setAttribute("aria-label", `View flyer: ${flyer.title}`);
+      link.setAttribute("aria-label", `${flyer.is_published ? "View" : "Preview"} flyer: ${flyer.title}`);
       const image = document.createElement("img");
       image.src = flyer.url;
       image.alt = `${flyer.title} party flyer`;
@@ -124,18 +121,22 @@ async function loadPartyFlyers() {
       info.className = "flyer-info";
       const date = document.createElement("span");
       date.className = "flyer-date";
-      date.textContent = displayFlyerDate(flyer.date);
+      date.textContent = `${displayFlyerDate(flyer.event_date)}${flyer.event_date < todayKey ? " · PAST EVENT" : " · UPCOMING"}`;
       const title = document.createElement("h3");
       title.textContent = flyer.title;
       info.append(date, title);
+      if (flyer.venue) { const venue = document.createElement("p"); venue.className = "flyer-meta"; venue.textContent = flyer.venue; info.append(venue); }
+      if (flyer.landmark) { const landmark = document.createElement("p"); landmark.className = "flyer-meta"; landmark.textContent = flyer.landmark; info.append(landmark); }
+      if (flyer.description) { const description = document.createElement("p"); description.className = "flyer-description"; description.textContent = flyer.description; info.append(description); }
       card.append(link, info);
       if (isDhandaSignedIn) {
-        const remove = document.createElement("button");
-        remove.type = "button";
-        remove.className = "flyer-delete";
-        remove.textContent = "REMOVE FLYER";
-        remove.addEventListener("click", () => deletePartyFlyer(flyer.name, remove));
-        card.append(remove);
+        const actions = document.createElement("div"); actions.className = "flyer-admin-actions";
+        const edit = document.createElement("button"); edit.type = "button"; edit.textContent = "EDITAR"; edit.addEventListener("click", () => openFlyerEditor(flyer));
+        const publish = document.createElement("button"); publish.type = "button"; publish.textContent = flyer.is_published ? "DESPUBLICAR" : "PUBLICAR"; publish.addEventListener("click", () => toggleFlyerPublication(flyer, publish));
+        const up = document.createElement("button"); up.type = "button"; up.textContent = "↑"; up.setAttribute("aria-label", "Mover flyer para cima"); up.addEventListener("click", () => moveFlyer(flyer, -1));
+        const down = document.createElement("button"); down.type = "button"; down.textContent = "↓"; down.setAttribute("aria-label", "Mover flyer para baixo"); down.addEventListener("click", () => moveFlyer(flyer, 1));
+        const remove = document.createElement("button"); remove.type = "button"; remove.textContent = "APAGAR"; remove.className = "flyer-admin-delete"; remove.addEventListener("click", () => deletePartyFlyer(flyer, remove));
+        actions.append(edit, publish, up, down, remove); card.append(actions);
       }
       grid.append(card);
     }
@@ -144,9 +145,27 @@ async function loadPartyFlyers() {
     grid.replaceChildren();
     const empty = document.createElement("p");
     empty.className = "flyer-empty";
-    empty.textContent = "Party flyers will appear here soon.";
+    empty.textContent = isDhandaSignedIn ? "Não foi possível carregar os flyers. Execute a atualização de flyers no Supabase." : "Party flyers will appear here soon.";
     grid.append(empty);
   }
+}
+
+function openFlyerEditor(flyer = null) {
+  if (!isDhandaSignedIn) return;
+  editingFlyerId = flyer?.id || null;
+  flyerForm.reset();
+  document.querySelector("#flyer-id").value = flyer?.id || "";
+  document.querySelector("#flyer-title").value = flyer?.title || "";
+  document.querySelector("#flyer-date").value = flyer?.event_date || "";
+  document.querySelector("#flyer-venue").value = flyer?.venue || "";
+  document.querySelector("#flyer-landmark").value = flyer?.landmark || "";
+  document.querySelector("#flyer-description").value = flyer?.description || "";
+  document.querySelector("#flyer-state").value = flyer?.is_published === false ? "draft" : "published";
+  document.querySelector("#flyer-file").required = !flyer;
+  document.querySelector("#flyer-submit").innerHTML = flyer ? "SALVAR ALTERAÇÕES <span>↗</span>" : "PUBLICAR FLYER <span>↗</span>";
+  document.querySelector("#flyer-dialog-title").innerHTML = flyer ? "EDIT FLYER<span>.</span>" : "PUBLISH A FLYER<span>.</span>";
+  setMessage(document.querySelector("#flyer-message"), "");
+  flyerDialog.showModal();
 }
 
 async function publishPartyFlyer(event) {
@@ -156,47 +175,93 @@ async function publishPartyFlyer(event) {
   const button = document.querySelector("#flyer-submit");
   const title = document.querySelector("#flyer-title").value.trim();
   const date = document.querySelector("#flyer-date").value;
+  const venue = document.querySelector("#flyer-venue").value.trim();
+  const landmark = document.querySelector("#flyer-landmark").value.trim();
+  const description = document.querySelector("#flyer-description").value.trim();
+  const isPublished = document.querySelector("#flyer-state").value === "published";
+  const fileId = document.querySelector("#flyer-id").value;
   const file = document.querySelector("#flyer-file").files[0];
-  if (!file || !["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 10 * 1024 * 1024) {
+  if ((!file && !fileId) || (file && (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 10 * 1024 * 1024))) {
     setMessage(message, "Choose a JPG, PNG, or WebP image up to 10 MB.", true);
     return;
   }
-  const extension = ({ "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" })[file.type];
-  const slug = title.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80) || "party-flyer";
-  const objectPath = `${date}__${slug}__${crypto.randomUUID()}.${extension}`;
   button.disabled = true;
   try {
     const client = await connectSupabase();
     if (!client) throw new Error("Supabase is not configured");
-    const { error } = await client.storage.from(FLYER_BUCKET).upload(objectPath, file, {
-      cacheControl: "3600",
-      contentType: file.type,
-      upsert: false
-    });
-    if (error) throw error;
+    const current = fileId ? flyerRecords.find(item => item.id === fileId) : null;
+    let objectPath = current?.object_path || "";
+    if (file) {
+      const extension = ({ "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" })[file.type];
+      objectPath = `${date}__${crypto.randomUUID()}.${extension}`;
+      const { error: uploadError } = await client.storage.from(FLYER_BUCKET).upload(objectPath, file, {
+        cacheControl: "3600", contentType: file.type, upsert: false
+      });
+      if (uploadError) throw uploadError;
+    }
+    const values = {
+      title, event_date: date, venue, landmark, description, object_path: objectPath,
+      is_published: isPublished,
+      sort_order: current?.sort_order ?? (flyerRecords.length ? Math.max(...flyerRecords.map(item => item.sort_order || 0)) + 1 : 0)
+    };
+    const { error: saveError } = current
+      ? await client.from("party_flyers").update(values).eq("id", current.id)
+      : await client.from("party_flyers").insert(values);
+    if (saveError) {
+      if (file) await client.storage.from(FLYER_BUCKET).remove([objectPath]);
+      throw saveError;
+    }
+    if (file && current?.object_path) await client.storage.from(FLYER_BUCKET).remove([current.object_path]);
     flyerForm.reset();
-    setMessage(message, "Flyer published to the public gallery.");
+    editingFlyerId = null;
+    setMessage(message, isPublished ? "Flyer salvo e publicado." : "Flyer salvo como rascunho.");
     await loadPartyFlyers();
   } catch (error) {
-    console.error("Could not publish party flyer", error);
-    setMessage(message, "Could not publish. Confirm the flyer storage setup has been run in Supabase.", true);
+    console.error("Could not save party flyer", error);
+    setMessage(message, "Não foi possível salvar. Confira se a atualização de gerenciamento de flyers foi executada no Supabase.", true);
   } finally {
     button.disabled = false;
   }
 }
 
-async function deletePartyFlyer(objectPath, button) {
+async function toggleFlyerPublication(flyer, button) {
   if (!isDhandaSignedIn || !supabaseClient) return;
-  if (!window.confirm("Remove this flyer from the public gallery?")) return;
   button.disabled = true;
   try {
-    const { error } = await supabaseClient.storage.from(FLYER_BUCKET).remove([objectPath]);
+    const { error } = await supabaseClient.from("party_flyers").update({ is_published: !flyer.is_published }).eq("id", flyer.id);
+    if (error) throw error;
+    await loadPartyFlyers();
+  } catch (error) {
+    button.disabled = false;
+    window.alert("Não foi possível atualizar a publicação do flyer.");
+  }
+}
+
+async function moveFlyer(flyer, direction) {
+  if (!isDhandaSignedIn || !supabaseClient) return;
+  const ordered = [...flyerRecords].sort((a, b) => a.sort_order - b.sort_order);
+  const index = ordered.findIndex(item => item.id === flyer.id);
+  const target = ordered[index + direction];
+  if (!target) return;
+  const { error } = await supabaseClient.from("party_flyers").update({ sort_order: target.sort_order }).eq("id", flyer.id);
+  if (!error) await supabaseClient.from("party_flyers").update({ sort_order: flyer.sort_order }).eq("id", target.id);
+  await loadPartyFlyers();
+}
+
+async function deletePartyFlyer(flyer, button) {
+  if (!isDhandaSignedIn || !supabaseClient) return;
+  if (!window.confirm("Apagar este flyer da galeria?")) return;
+  button.disabled = true;
+  try {
+    const { error: rowError } = await supabaseClient.from("party_flyers").delete().eq("id", flyer.id);
+    if (rowError) throw rowError;
+    const { error } = await supabaseClient.storage.from(FLYER_BUCKET).remove([flyer.object_path]);
     if (error) throw error;
     await loadPartyFlyers();
   } catch (error) {
     console.error("Could not remove party flyer", error);
     button.disabled = false;
-    window.alert("Could not remove flyer. Confirm the flyer storage setup has been run in Supabase.");
+    window.alert("Não foi possível apagar o flyer. Confira a sessão e a configuração do Supabase.");
   }
 }
 
@@ -231,6 +296,25 @@ function timeToMinutes(time) {
 
 function timeRangeLabel(entry) {
   return entry.end_time ? `${timeLabel(entry.start_time)} – ${timeLabel(entry.end_time)}` : timeLabel(entry.start_time);
+}
+
+function refreshDashboard() {
+  if (!isDhandaSignedIn) return;
+  const parts = dateParts(new Date());
+  const nowKey = `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+  const upcoming = scheduleEntries.filter(entry => entry.status === "available")
+    .map(entry => ({ ...entry, stamp: `${entry.event_date}T${entry.start_time}` }))
+    .sort((a, b) => a.stamp.localeCompare(b.stamp));
+  const next = upcoming.find(entry => entry.stamp > nowKey);
+  document.querySelector("#dashboard-next").textContent = next
+    ? humanDate(next.event_date, { weekday: "short", month: "short", day: "numeric" }).toUpperCase()
+    : "—";
+  document.querySelector("#dashboard-next-time").textContent = next
+    ? `${timeRangeLabel(next)} SLT`
+    : "Nenhum período futuro";
+  document.querySelector("#dashboard-available").textContent = String(upcoming.length);
+  document.querySelector("#dashboard-flyers").textContent = String(flyerRecords.filter(flyer => flyer.is_published).length);
+  document.querySelector("#dashboard-drafts").textContent = `${flyerRecords.filter(flyer => !flyer.is_published).length} rascunhos`;
 }
 
 function humanDate(key, options = { weekday: "long", month: "long", day: "numeric" }) {
@@ -401,6 +485,7 @@ async function loadRemoteSchedule() {
     setScheduleFromEntries(data);
     renderCalendar();
     setNext();
+    refreshDashboard();
   } catch (error) {
     console.error("Could not load DHANDA schedule", error);
     document.querySelector("#day-count").textContent = "Could not load saved schedule. Please try again later.";
@@ -411,10 +496,12 @@ function setAdminSession(isSignedIn) {
   authReady = true;
   isDhandaSignedIn = isSignedIn;
   document.querySelector("#admin-tools").hidden = !isSignedIn;
+  document.querySelector("#admin-dashboard").hidden = !isSignedIn;
   document.querySelector("#login-open").hidden = isSignedIn;
   if (isSignedIn) loadBookingRequests();
   else document.querySelector("#request-count").textContent = "0";
   loadPartyFlyers();
+  refreshDashboard();
   showSelectedDay();
 }
 
@@ -606,6 +693,7 @@ async function loadBookingRequests() {
       .order("created_at", { ascending: false });
     if (error) throw error;
     document.querySelector("#request-count").textContent = String(data.filter(request => request.status === "pending").length);
+    document.querySelector("#dashboard-requests").textContent = String(data.filter(request => request.status === "pending").length);
     renderBookingRequests(data);
   } catch (error) {
     console.error("Could not load private booking inquiries", error);
@@ -773,10 +861,19 @@ document.querySelector("#booking-requests-open").addEventListener("click", () =>
 });
 document.querySelector("#flyer-open").addEventListener("click", () => {
   if (!isDhandaSignedIn) return;
-  flyerForm.reset();
-  setMessage(document.querySelector("#flyer-message"), "");
-  flyerDialog.showModal();
+  openFlyerEditor();
 });
+document.querySelector("#dashboard-open").addEventListener("click", () => {
+  if (!isDhandaSignedIn) return;
+  refreshDashboard();
+  document.querySelector("#admin-dashboard").scrollIntoView({ behavior: "smooth", block: "center" });
+});
+document.querySelectorAll("[data-dashboard-action]").forEach(button => button.addEventListener("click", () => {
+  const action = button.dataset.dashboardAction;
+  if (action === "add") document.querySelector("#add-open").click();
+  if (action === "requests") document.querySelector("#booking-requests-open").click();
+  if (action === "flyer") document.querySelector("#flyer-open").click();
+}));
 document.querySelector("#logout-button").addEventListener("click", async () => {
   if (supabaseClient) await supabaseClient.auth.signOut();
   setAdminSession(false);

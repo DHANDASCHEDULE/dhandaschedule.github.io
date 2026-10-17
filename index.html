@@ -9,9 +9,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261017-time-ranges">
+  <link rel="stylesheet" href="style.css?v=20261017-admin-dashboard-flyers">
   <script src="supabase-config.js?v=20261012-admin"></script>
-  <script type="module" src="script.js?v=20261017-time-ranges"></script>
+  <script type="module" src="script.js?v=20261017-admin-dashboard-flyers"></script>
 </head>
 <body>
   <header class="topbar">
@@ -25,6 +25,7 @@
           <button class="login-button" id="login-open" type="button">LOGIN <span>↗</span></button>
           <div class="admin-tools" id="admin-tools" hidden>
             <button class="admin-nav-button" id="booking-requests-open" type="button">SOLICITAÇÕES <span class="request-count" id="request-count">0</span></button>
+            <button class="admin-nav-button" id="dashboard-open" type="button">PAINEL</button>
             <button class="admin-nav-button" id="flyer-open" type="button">PUBLICAR FLYER <span>＋</span></button>
             <button class="admin-nav-button" id="add-open" type="button">ADICIONAR HORÁRIO <span>＋</span></button>
             <button class="admin-nav-button" id="remove-open" type="button">REMOVER HORÁRIO <span>−</span></button>
@@ -46,6 +47,24 @@
         <img src="assets/dhanda-host-manager.jpg" alt="DHANDA, apresentada em um ambiente de clube iluminado em vermelho e azul" fetchpriority="high">
         <figcaption>DHANDA <span>•</span> HOST &amp; MANAGER</figcaption>
       </figure>
+    </section>
+
+    <section class="admin-dashboard" id="admin-dashboard" aria-labelledby="dashboard-title" hidden>
+      <div class="dashboard-heading">
+        <div><p class="eyebrow">DHANDA / PRIVATE WORKSPACE</p><h2 id="dashboard-title">PAINEL<span>.</span></h2></div>
+        <span class="dashboard-status"><i></i> ADMINISTRADORA CONECTADA</span>
+      </div>
+      <div class="dashboard-stats" aria-live="polite">
+        <article class="dashboard-stat"><span>PRÓXIMO PERÍODO LIVRE</span><strong id="dashboard-next">—</strong><small id="dashboard-next-time">Nenhum período futuro</small></article>
+        <article class="dashboard-stat"><span>PERÍODOS DISPONÍVEIS</span><strong id="dashboard-available">0</strong><small>Na agenda pública</small></article>
+        <article class="dashboard-stat"><span>PEDIDOS PENDENTES</span><strong id="dashboard-requests">0</strong><small>Solicitações para revisar</small></article>
+        <article class="dashboard-stat"><span>FLYERS PUBLICADOS</span><strong id="dashboard-flyers">0</strong><small id="dashboard-drafts">0 rascunhos</small></article>
+      </div>
+      <div class="dashboard-actions">
+        <button type="button" data-dashboard-action="add">＋ ADICIONAR PERÍODO</button>
+        <button type="button" data-dashboard-action="requests">▤ VER SOLICITAÇÕES</button>
+        <button type="button" data-dashboard-action="flyer">＋ PUBLICAR FLYER</button>
+      </div>
     </section>
 
     <section class="next-set" aria-labelledby="next-heading">
@@ -224,11 +243,16 @@
   <dialog class="admin-dialog flyer-dialog" id="flyer-dialog" aria-labelledby="flyer-dialog-title">
     <div class="dialog-topline"><p class="eyebrow">DHANDA / EVENT PROMOTION</p><button class="dialog-close" id="flyer-close" type="button" aria-label="Close flyer form">×</button></div>
     <h2 id="flyer-dialog-title">PUBLISH A FLYER<span>.</span></h2>
-    <p class="form-intro">Add a party flyer to the public gallery. Use a JPG, PNG, or WebP image up to 10 MB.</p>
+      <p class="form-intro">Prepare a flyer, keep it as a draft, or publish it in the gallery. JPG, PNG, or WebP up to 10 MB.</p>
     <form id="flyer-form" class="admin-form">
+      <input id="flyer-id" type="hidden">
       <label for="flyer-title">EVENT TITLE</label><input id="flyer-title" maxlength="100" required placeholder="Event or party name">
       <label for="flyer-date">EVENT DATE</label><input id="flyer-date" type="date" required>
-      <label for="flyer-file">FLYER IMAGE</label><input id="flyer-file" type="file" accept="image/jpeg,image/png,image/webp" required>
+      <label for="flyer-venue">CLUB / VENUE</label><input id="flyer-venue" maxlength="120" placeholder="Club name">
+      <label for="flyer-landmark">LANDMARK / LOCATION</label><input id="flyer-landmark" maxlength="300" placeholder="Second Life landmark">
+      <label for="flyer-description">SHORT DESCRIPTION</label><textarea id="flyer-description" maxlength="500" rows="3" placeholder="Optional event details"></textarea>
+      <label for="flyer-file">FLYER IMAGE <span class="optional-label">OPTIONAL WHEN EDITING</span></label><input id="flyer-file" type="file" accept="image/jpeg,image/png,image/webp">
+      <label for="flyer-state">PUBLICATION</label><select id="flyer-state"><option value="published">PUBLISH NOW</option><option value="draft">SAVE AS DRAFT</option></select>
       <button class="primary-action" id="flyer-submit" type="submit">PUBLISH FLYER <span>↗</span></button>
       <p class="form-message" id="flyer-message" role="status"></p>
     </form>
