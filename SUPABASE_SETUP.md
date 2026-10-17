@@ -34,7 +34,13 @@ The public booking form includes a request type for regular host bookings or par
 
 ## Upgrade: public party-flyer gallery
 
-Run `supabase-party-flyers-setup.sql` once in the Supabase SQL Editor. It creates the public `dhanda-party-flyers` storage bucket (JPG, PNG, or WebP up to 10 MB) and policies that allow public viewing while limiting upload/removal to DHANDA. After the site update is published and this SQL has run, DHANDA can log in, choose **PUBLICAR FLYER**, enter the event title/date, and upload the image. Published flyers appear in the public **PARTY FLYERS** gallery; the signed-in DHANDA account can remove them from that same gallery.
+Run `supabase-party-flyers-setup.sql` once in the Supabase SQL Editor. It creates the public `dhanda-party-flyers` storage bucket (JPG, PNG, or WebP up to 10 MB) and policies that allow public viewing while limiting upload/removal to DHANDA.
+
+## Upgrade: admin dashboard and flyer management
+
+Before publishing this update, run `supabase-flyer-management-upgrade.sql` once in the SQL Editor. It creates a flyer metadata table, imports current flyers from the storage bucket, and restricts draft visibility and flyer management to DHANDA's login. The signed-in panel shows the next available period, available-period count, pending booking requests, and published/draft flyer counts. Quick actions open the calendar editor, private booking inbox, and flyer editor. Flyers can be edited, reordered, saved as drafts, published/unpublished, or deleted. Existing flyers remain published and keep their current images.
+
+Drafts do not appear in the public gallery. The existing flyer bucket is public, so someone with a direct image URL can still open the image; only the site gallery listing is hidden until publication.
 
 ## Upgrade: booking contact details and time ranges
 
