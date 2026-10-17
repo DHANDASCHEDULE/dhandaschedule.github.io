@@ -9,9 +9,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261017-party-inbox">
+  <link rel="stylesheet" href="style.css?v=20261017-party-flyers">
   <script src="supabase-config.js?v=20261012-admin"></script>
-  <script type="module" src="script.js?v=20261017-party-inbox"></script>
+  <script type="module" src="script.js?v=20261017-party-flyers"></script>
 </head>
 <body>
   <header class="topbar">
@@ -25,6 +25,7 @@
           <button class="login-button" id="login-open" type="button">LOGIN <span>↗</span></button>
           <div class="admin-tools" id="admin-tools" hidden>
             <button class="admin-nav-button" id="booking-requests-open" type="button">SOLICITAÇÕES <span class="request-count" id="request-count">0</span></button>
+            <button class="admin-nav-button" id="flyer-open" type="button">PUBLICAR FLYER <span>＋</span></button>
             <button class="admin-nav-button" id="add-open" type="button">ADICIONAR HORÁRIO <span>＋</span></button>
             <button class="admin-nav-button" id="remove-open" type="button">REMOVER HORÁRIO <span>−</span></button>
             <button class="admin-nav-button logout-button" id="logout-button" type="button">SAIR</button>
@@ -99,9 +100,19 @@
       <p class="calendar-footnote">Times are shown in Pacific Time (SLT). Each entry is a time slot; no end time is set yet.</p>
     </section>
 
+    <section id="party-flyers" class="flyer-section" aria-labelledby="flyers-title">
+      <div class="section-heading flyer-heading">
+        <div><p class="eyebrow">02 / EVENT ANNOUNCEMENTS</p><h2 id="flyers-title">PARTY FLYERS<span>.</span></h2></div>
+        <p class="section-caption">Upcoming events and special appearances featuring DHANDA.</p>
+      </div>
+      <div class="flyer-grid" id="flyer-grid" aria-live="polite">
+        <p class="flyer-empty">Loading event flyers…</p>
+      </div>
+    </section>
+
     <section id="about" class="about-section" aria-labelledby="about-title">
       <div class="section-heading about-heading">
-        <div><p class="eyebrow">02 / ABOUT DHANDA</p><h2 id="about-title">PROFESSIONAL<br><em>HOST &amp; MANAGER.</em></h2></div>
+        <div><p class="eyebrow">03 / ABOUT DHANDA</p><h2 id="about-title">PROFESSIONAL<br><em>HOST &amp; MANAGER.</em></h2></div>
         <p class="about-role">Professional Host <i>·</i> Host Manager <i>·</i> Club Management</p>
       </div>
 
@@ -121,7 +132,7 @@
       </div>
 
       <div class="services-heading">
-        <div><p class="eyebrow">03 / HOW I CAN HELP</p><h2>SERVICES<span>.</span></h2></div>
+        <div><p class="eyebrow">04 / HOW I CAN HELP</p><h2>SERVICES<span>.</span></h2></div>
         <p class="services-intro">Looking for a dedicated Host or professional support for your club? Let's bring your next event to life with great energy, reliable service, and attention to every detail!</p>
       </div>
 
@@ -204,6 +215,19 @@
       <div class="honeypot" aria-hidden="true"><label for="booking-website">Website</label><input id="booking-website" name="website" tabindex="-1" autocomplete="off"></div>
       <button class="primary-action" type="submit">SEND BOOKING REQUEST <span>↗</span></button>
       <p class="form-message" id="booking-message-status" role="status"></p>
+    </form>
+  </dialog>
+
+  <dialog class="admin-dialog flyer-dialog" id="flyer-dialog" aria-labelledby="flyer-dialog-title">
+    <div class="dialog-topline"><p class="eyebrow">DHANDA / EVENT PROMOTION</p><button class="dialog-close" id="flyer-close" type="button" aria-label="Close flyer form">×</button></div>
+    <h2 id="flyer-dialog-title">PUBLISH A FLYER<span>.</span></h2>
+    <p class="form-intro">Add a party flyer to the public gallery. Use a JPG, PNG, or WebP image up to 10 MB.</p>
+    <form id="flyer-form" class="admin-form">
+      <label for="flyer-title">EVENT TITLE</label><input id="flyer-title" maxlength="100" required placeholder="Event or party name">
+      <label for="flyer-date">EVENT DATE</label><input id="flyer-date" type="date" required>
+      <label for="flyer-file">FLYER IMAGE</label><input id="flyer-file" type="file" accept="image/jpeg,image/png,image/webp" required>
+      <button class="primary-action" id="flyer-submit" type="submit">PUBLISH FLYER <span>↗</span></button>
+      <p class="form-message" id="flyer-message" role="status"></p>
     </form>
   </dialog>
 

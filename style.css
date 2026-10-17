@@ -335,3 +335,40 @@ body {
   .service-card { min-height: 0; padding: 22px 20px 25px; }
   .service-card h3 { margin-top: 14px; }
 }
+
+/* Public party flyer gallery */
+.flyer-dialog { width: min(520px, calc(100vw - 32px)); }
+.flyer-dialog input[type="file"] { padding: 10px; font-size: 11px; }
+.flyer-section {
+  max-width: 1700px;
+  margin: 0 auto;
+  padding: 92px clamp(20px, 5.6vw, 88px) 56px;
+  scroll-margin-top: 92px;
+}
+.flyer-heading { align-items: end; margin-bottom: 28px; }
+.flyer-heading h2 { margin: 0; font-size: clamp(38px, 5.4vw, 68px); line-height: .95; letter-spacing: -.065em; font-weight: 800; }
+.flyer-heading h2 span { color: var(--red); }
+.flyer-heading .section-caption { max-width: 380px; margin-bottom: 5px; }
+.flyer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 245px), 1fr)); gap: 18px; }
+.flyer-card { position: relative; min-width: 0; overflow: hidden; border: 1px solid #302729; background: #101010; transition: border-color .22s, box-shadow .22s, transform .22s; }
+.flyer-card:hover { transform: translateY(-3px); border-color: #8e2931; box-shadow: 0 12px 34px #0008, 0 0 20px #f02d3718; }
+.flyer-image-link { display: grid; place-items: center; width: 100%; aspect-ratio: 4 / 5; overflow: hidden; background: radial-gradient(ellipse at 50% 40%, #1c1c1c, #080808 72%); }
+.flyer-image-link img { display: block; width: 100%; height: 100%; object-fit: contain; transition: transform .35s ease; }
+.flyer-card:hover .flyer-image-link img { transform: scale(1.025); }
+.flyer-info { padding: 15px 16px 17px; }
+.flyer-date { color: #ec747b; font: 9px var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+.flyer-info h3 { margin: 8px 0 0; color: #f4f4f2; font-size: 16px; line-height: 1.35; letter-spacing: -.025em; }
+.flyer-empty { grid-column: 1 / -1; margin: 0; padding: 30px; border: 1px dashed #383033; color: #929292; font: 10px/1.8 var(--mono); letter-spacing: .05em; text-align: center; }
+.flyer-delete { display: block; width: calc(100% - 30px); min-height: 34px; margin: 0 15px 15px; border: 1px solid #66232a; background: #211012; color: #ff989e; font: 8px var(--mono); letter-spacing: .08em; cursor: pointer; }
+.flyer-delete:hover { border-color: var(--red); background: #351417; color: #fff; }
+.flyer-delete:disabled { opacity: .55; cursor: wait; }
+@media(max-width:600px) {
+  .flyer-section { padding: 72px 20px 38px; }
+  .flyer-heading { align-items: flex-start; }
+  .flyer-heading h2 { font-size: clamp(36px, 10vw, 50px); }
+  .flyer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .flyer-info { padding: 12px 11px 14px; }
+  .flyer-info h3 { font-size: 13px; }
+  .flyer-date { font-size: 8px; }
+  .flyer-delete { width: calc(100% - 20px); margin: 0 10px 10px; font-size: 7px; }
+}

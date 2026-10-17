@@ -32,4 +32,8 @@ The schedule stores one date and start time per slot. It does not store an end t
 
 The public booking form includes a request type for regular host bookings or parties/special events. The selected type is saved with the inquiry so DHANDA can identify it in her private inbox. To enable the inbox's **APAGAR MENSAGEM** action, run `supabase-booking-delete-upgrade.sql` once in the Supabase SQL Editor. Row Level Security limits inquiry deletion to the DHANDA account. Removing an accepted inquiry only removes its message; its reserved calendar slot stays in place.
 
+## Upgrade: public party-flyer gallery
+
+Run `supabase-party-flyers-setup.sql` once in the Supabase SQL Editor. It creates the public `dhanda-party-flyers` storage bucket (JPG, PNG, or WebP up to 10 MB) and policies that allow public viewing while limiting upload/removal to DHANDA. After the site update is published and this SQL has run, DHANDA can log in, choose **PUBLICAR FLYER**, enter the event title/date, and upload the image. Published flyers appear in the public **PARTY FLYERS** gallery; the signed-in DHANDA account can remove them from that same gallery.
+
 O site mantém a agenda inicial visível enquanto o Supabase não estiver configurado. Não publique a integração como pronta antes de preencher a configuração, executar o SQL e importar a agenda inicial.

@@ -35,6 +35,7 @@ const INITIAL_SCHEDULE = {
 const PACIFIC = "America/Los_Angeles";
 const ADMIN_USERNAME = "dhanda";
 const ADMIN_EMAIL = "dhanda@dhandaschedule.github.io";
+const FLYER_BUCKET = "dhanda-party-flyers";
 const dateFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: PACIFIC, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" });
 const dateParts = (date) => Object.fromEntries(dateFormatter.formatToParts(date).filter(part => part.type !== "literal").map(part => [part.type, part.value]));
 const toKey = (year, month, day) => `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
@@ -60,6 +61,144 @@ const removeForm = document.querySelector("#remove-form");
 const bookingDialog = document.querySelector("#booking-dialog");
 const bookingForm = document.querySelector("#booking-form");
 const bookingRequestsDialog = document.querySelector("#booking-requests-dialog");
+const flyerDialog = document.querySelector("#flyer-dialog");
+const flyerForm = document.querySelector("#flyer-form");
+
+function displayFlyerDate(value) {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: PACIFIC })
+    .format(new Date(Date.UTC(year, month - 1, day, 12)));
+}
+
+function displayFlyerTitle(slug) {
+  return slug.replace(/-/g, " ").replace(/\b\w/g, letter => letter.toUpperCase());
+}
+
+async function loadPartyFlyers() {
+  const grid = document.querySelector("#flyer-grid");
+  if (!grid) return;
+  try {
+    const client = await connectSupabase();
+    if (!client) throw new Error("Supabase is not configured");
+    const { data, error } = await client.storage.from(FLYER_BUCKET).list("", {
+      limit: 100,
+      sortBy: { column: "created_at", order: "desc" }
+    });
+    if (error) throw error;
+    const todayParts = dateParts(new Date());
+    const todayKey = `${todayParts.year}-${todayParts.month}-${todayParts.day}`;
+    const flyers = (data || []).map(file => {
+      const [date, slug, filename] = file.name.split("__");
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date || "") || !slug || !filename) return null;
+      const { data: publicFile } = client.storage.from(FLYER_BUCKET).getPublicUrl(file.name);
+      return { ...file, date, title: displayFlyerTitle(slug), url: publicFile.publicUrl };
+    }).filter(Boolean).sort((a, b) => {
+      const aIsPast = a.date < todayKey;
+      const bIsPast = b.date < todayKey;
+      if (aIsPast !== bIsPast) return aIsPast ? 1 : -1;
+      return aIsPast ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date);
+    });
+    grid.replaceChildren();
+    if (!flyers.length) {
+      const empty = document.createElement("p");
+      empty.className = "flyer-empty";
+      empty.textContent = "No event flyers published yet.";
+      grid.append(empty);
+      return;
+    }
+    for (const flyer of flyers) {
+      const card = document.createElement("article");
+      card.className = "flyer-card";
+      const link = document.createElement("a");
+      link.className = "flyer-image-link";
+      link.href = flyer.url;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.setAttribute("aria-label", `View flyer: ${flyer.title}`);
+      const image = document.createElement("img");
+      image.src = flyer.url;
+      image.alt = `${flyer.title} party flyer`;
+      image.loading = "lazy";
+      link.append(image);
+      const info = document.createElement("div");
+      info.className = "flyer-info";
+      const date = document.createElement("span");
+      date.className = "flyer-date";
+      date.textContent = displayFlyerDate(flyer.date);
+      const title = document.createElement("h3");
+      title.textContent = flyer.title;
+      info.append(date, title);
+      card.append(link, info);
+      if (isDhandaSignedIn) {
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "flyer-delete";
+        remove.textContent = "REMOVE FLYER";
+        remove.addEventListener("click", () => deletePartyFlyer(flyer.name, remove));
+        card.append(remove);
+      }
+      grid.append(card);
+    }
+  } catch (error) {
+    console.error("Could not load party flyers", error);
+    grid.replaceChildren();
+    const empty = document.createElement("p");
+    empty.className = "flyer-empty";
+    empty.textContent = "Party flyers will appear here soon.";
+    grid.append(empty);
+  }
+}
+
+async function publishPartyFlyer(event) {
+  event.preventDefault();
+  if (!isDhandaSignedIn) return;
+  const message = document.querySelector("#flyer-message");
+  const button = document.querySelector("#flyer-submit");
+  const title = document.querySelector("#flyer-title").value.trim();
+  const date = document.querySelector("#flyer-date").value;
+  const file = document.querySelector("#flyer-file").files[0];
+  if (!file || !["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 10 * 1024 * 1024) {
+    setMessage(message, "Choose a JPG, PNG, or WebP image up to 10 MB.", true);
+    return;
+  }
+  const extension = ({ "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" })[file.type];
+  const slug = title.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80) || "party-flyer";
+  const objectPath = `${date}__${slug}__${crypto.randomUUID()}.${extension}`;
+  button.disabled = true;
+  try {
+    const client = await connectSupabase();
+    if (!client) throw new Error("Supabase is not configured");
+    const { error } = await client.storage.from(FLYER_BUCKET).upload(objectPath, file, {
+      cacheControl: "3600",
+      contentType: file.type,
+      upsert: false
+    });
+    if (error) throw error;
+    flyerForm.reset();
+    setMessage(message, "Flyer published to the public gallery.");
+    await loadPartyFlyers();
+  } catch (error) {
+    console.error("Could not publish party flyer", error);
+    setMessage(message, "Could not publish. Confirm the flyer storage setup has been run in Supabase.", true);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function deletePartyFlyer(objectPath, button) {
+  if (!isDhandaSignedIn || !supabaseClient) return;
+  if (!window.confirm("Remove this flyer from the public gallery?")) return;
+  button.disabled = true;
+  try {
+    const { error } = await supabaseClient.storage.from(FLYER_BUCKET).remove([objectPath]);
+    if (error) throw error;
+    await loadPartyFlyers();
+  } catch (error) {
+    console.error("Could not remove party flyer", error);
+    button.disabled = false;
+    window.alert("Could not remove flyer. Confirm the flyer storage setup has been run in Supabase.");
+  }
+}
 
 function entriesForDate(date) {
   return scheduleEntries.filter(entry => entry.event_date === date).sort((a, b) => String(a.start_time).localeCompare(String(b.start_time)));
@@ -261,6 +400,7 @@ function setAdminSession(isSignedIn) {
   document.querySelector("#login-open").hidden = isSignedIn;
   if (isSignedIn) loadBookingRequests();
   else document.querySelector("#request-count").textContent = "0";
+  loadPartyFlyers();
   showSelectedDay();
 }
 
@@ -575,6 +715,12 @@ document.querySelector("#booking-requests-open").addEventListener("click", () =>
   loadBookingRequests();
   bookingRequestsDialog.showModal();
 });
+document.querySelector("#flyer-open").addEventListener("click", () => {
+  if (!isDhandaSignedIn) return;
+  flyerForm.reset();
+  setMessage(document.querySelector("#flyer-message"), "");
+  flyerDialog.showModal();
+});
 document.querySelector("#logout-button").addEventListener("click", async () => {
   if (supabaseClient) await supabaseClient.auth.signOut();
   setAdminSession(false);
@@ -582,11 +728,13 @@ document.querySelector("#logout-button").addEventListener("click", async () => {
 document.querySelector("#dialog-close").addEventListener("click", () => adminDialog.close());
 document.querySelector("#booking-close").addEventListener("click", () => bookingDialog.close());
 document.querySelector("#requests-close").addEventListener("click", () => bookingRequestsDialog.close());
+document.querySelector("#flyer-close").addEventListener("click", () => flyerDialog.close());
 document.querySelector("#login-form").addEventListener("submit", event => { event.preventDefault(); startLogin(); });
 document.querySelector("#add-form").addEventListener("submit", saveScheduleEntry);
 document.querySelector("#remove-form").addEventListener("submit", removeScheduledSet);
 document.querySelector("#remove-date").addEventListener("change", refreshRemoveTimes);
 bookingForm.addEventListener("submit", submitBookingInquiry);
+flyerForm.addEventListener("submit", publishPartyFlyer);
 document.querySelector("#booking-type").addEventListener("change", event => {
   document.querySelector("#booking-message").placeholder = event.target.value === "party"
     ? "Share the party name, occasion, and any details DHANDA should know."
@@ -597,9 +745,11 @@ document.querySelector("#remove-form").addEventListener("reset", refreshRemoveTi
 adminDialog.addEventListener("click", event => { if (event.target === adminDialog) adminDialog.close(); });
 bookingDialog.addEventListener("click", event => { if (event.target === bookingDialog) bookingDialog.close(); });
 bookingRequestsDialog.addEventListener("click", event => { if (event.target === bookingRequestsDialog) bookingRequestsDialog.close(); });
+flyerDialog.addEventListener("click", event => { if (event.target === flyerDialog) flyerDialog.close(); });
 
 setNext();
 renderCalendar();
+loadPartyFlyers();
 window.setInterval(setNext, 1000);
 
 if (supabaseConfigured()) {
