@@ -36,4 +36,8 @@ The public booking form includes a request type for regular host bookings or par
 
 Run `supabase-party-flyers-setup.sql` once in the Supabase SQL Editor. It creates the public `dhanda-party-flyers` storage bucket (JPG, PNG, or WebP up to 10 MB) and policies that allow public viewing while limiting upload/removal to DHANDA. After the site update is published and this SQL has run, DHANDA can log in, choose **PUBLICAR FLYER**, enter the event title/date, and upload the image. Published flyers appear in the public **PARTY FLYERS** gallery; the signed-in DHANDA account can remove them from that same gallery.
 
+## Upgrade: booking contact details and time ranges
+
+Before publishing the matching update, run `supabase-time-range-upgrade.sql` once in the SQL Editor. It adds the requester's SL nickname, Discord, club, landmark, and requested start/end times, plus end times for DHANDA's availability blocks. Existing calendar entries remain unchanged and continue to display their original start times until DHANDA edits them into ranges. When a request is accepted, only the requested part of an available block is reserved; any remaining available time is preserved.
+
 O site mantém a agenda inicial visível enquanto o Supabase não estiver configurado. Não publique a integração como pronta antes de preencher a configuração, executar o SQL e importar a agenda inicial.
