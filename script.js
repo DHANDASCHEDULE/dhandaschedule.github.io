@@ -346,17 +346,22 @@ function pacificInstant(key, time) {
 function setNext() {
   const parts = dateParts(new Date());
   const nowKey = `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
-  const next = scheduleEntries
-    .filter(entry => entry.status === "available")
-    .map(entry => ({ date: entry.event_date, time: entry.start_time, end: entry.end_time, stamp: `${entry.event_date}T${entry.start_time}` }))
-    .sort((a, b) => a.stamp.localeCompare(b.stamp))
-    .find(slot => slot.stamp > nowKey);
+  const upcomingEntries = scheduleEntries
+    .filter(entry => entry.status === "reserved" || entry.status === "available")
+    .map(entry => ({ date: entry.event_date, time: entry.start_time, end: entry.end_time, status: entry.status, stamp: `${entry.event_date}T${entry.start_time}` }))
+    .filter(slot => slot.stamp > nowKey)
+    .sort((a, b) => a.stamp.localeCompare(b.stamp));
+  const nextSet = upcomingEntries.find(slot => slot.status === "reserved");
+  const nextAvailable = upcomingEntries.find(slot => slot.status === "available");
+  const next = nextSet || nextAvailable;
+  const label = document.querySelector("#next-label");
   const heading = document.querySelector("#next-day");
   const time = document.querySelector("#next-time");
   const index = document.querySelector("#next-index");
   const subtitle = document.querySelector("#next-subtitle");
   const countdown = document.querySelector("#countdown");
   if (!next) {
+    label.textContent = "NEXT SET";
     heading.textContent = "REQUEST A DATE";
     time.textContent = "—";
     index.textContent = "BY INQUIRY";
@@ -364,16 +369,19 @@ function setNext() {
     countdown.textContent = "PREFERRED DATES ARE WELCOME";
     return;
   }
+  const isConfirmedSet = Boolean(nextSet);
+  label.textContent = isConfirmedSet ? "NEXT SET" : "NEXT AVAILABLE";
   heading.textContent = humanDate(next.date).toUpperCase();
   time.textContent = next.end ? `${timeLabel(next.time)} – ${timeLabel(next.end)}` : timeLabel(next.time);
   index.textContent = `01 / ${new Intl.DateTimeFormat("en-US", { month: "short", timeZone: PACIFIC }).format(new Date(`${next.date}T12:00:00-07:00`)).toUpperCase()}`;
-  subtitle.textContent = "AVAILABLE FOR BOOKING";
+  subtitle.textContent = isConfirmedSet ? "SCHEDULED SET · CONFIRMED" : "AVAILABLE FOR BOOKING";
   const remaining = Math.max(0, pacificInstant(next.date, next.time).getTime() - Date.now());
   const days = Math.floor(remaining / 86400000);
   const hours = Math.floor(remaining % 86400000 / 3600000);
   const minutes = Math.floor(remaining % 3600000 / 60000);
   const seconds = Math.floor(remaining % 60000 / 1000);
-  countdown.textContent = days ? `AVAILABLE IN ${days}D ${hours}H ${minutes}M` : `AVAILABLE IN ${hours}H ${minutes}M ${seconds}S`;
+  const countdownLabel = isConfirmedSet ? "SET STARTS IN" : "AVAILABLE IN";
+  countdown.textContent = days ? `${countdownLabel} ${days}D ${hours}H ${minutes}M` : `${countdownLabel} ${hours}H ${minutes}M ${seconds}S`;
 }
 
 function showSelectedDay() {
