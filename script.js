@@ -42,8 +42,9 @@ const toKey = (year, month, day) => `${year}-${String(month + 1).padStart(2, "0"
 
 let schedule = structuredClone(INITIAL_SCHEDULE);
 let scheduleEntries = Object.entries(INITIAL_SCHEDULE).flatMap(([event_date, times]) => times.map(start_time => ({ id: null, event_date, start_time, status: "reserved" })));
-let viewedMonth = new Date(2026, 9, 1);
-let selectedDate = "2026-10-12";
+const initialToday = dateParts(new Date());
+let viewedMonth = new Date(Number(initialToday.year), Number(initialToday.month) - 1, 1);
+let selectedDate = `${initialToday.year}-${initialToday.month}-${initialToday.day}`;
 let supabaseClient = null;
 let authReady = false;
 let isDhandaSignedIn = false;
