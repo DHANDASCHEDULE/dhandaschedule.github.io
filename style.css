@@ -418,3 +418,52 @@ body {
   .flyer-admin-actions { grid-template-columns: 1fr 1fr 30px 30px; }
   .flyer-admin-actions .flyer-admin-delete { grid-column: 1 / -1; }
 }
+
+/* Separate public pages and shared navigation */
+.topbar { gap: clamp(14px, 2vw, 30px); }
+.site-menu { display: flex; align-items: center; justify-content: center; gap: clamp(12px, 2.1vw, 30px); }
+.site-menu a { color: #a7a7a7; text-decoration: none; font: 9px var(--mono); letter-spacing: .09em; transition: color .2s, text-shadow .2s; }
+.site-menu a:hover, .site-menu a.is-active { color: #fff; text-shadow: 0 0 13px #f02d3780; }
+.site-menu a.is-active::after { display: block; height: 1px; margin-top: 7px; background: var(--red); content: ""; box-shadow: 0 0 8px #f02d37a0; }
+.login-link { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+.content-page main { min-height: calc(100vh - 150px); }
+.page-hero { max-width: 1560px; margin: 0 auto; padding: clamp(72px, 10vw, 140px) clamp(20px, 5.6vw, 88px) 64px; background: radial-gradient(ellipse 38rem 24rem at 18% 30%, #bd18221b, transparent 75%); }
+.page-hero .eyebrow { margin-bottom: 20px; }
+.page-hero h1 { margin: 0; font-size: clamp(48px, 8vw, 104px); line-height: .9; letter-spacing: -.075em; font-weight: 800; }
+.page-hero h1 em { color: var(--red); font-style: normal; }
+.page-hero > p:last-child { max-width: 620px; color: #aaa; font-size: 14px; line-height: 1.7; margin: 24px 0 0; }
+.page-hero i { color: var(--red); font-style: normal; }
+.page-section { max-width: 1560px; margin: 0 auto; }
+.about-section.page-section, .flyer-section.page-section { padding-top: 42px; }
+.page-cta { max-width: 1384px; margin: 0 auto 72px; padding: 24px clamp(20px, 5.6vw, 88px); display: flex; align-items: center; justify-content: space-between; gap: 18px; border-top: 1px solid #482025; border-bottom: 1px solid #482025; background: linear-gradient(90deg,#160e0f,#0d0d0d); }
+.page-cta p { margin: 0; color: #ddd; font: 10px var(--mono); letter-spacing: .12em; }
+.page-cta .book-button { display: inline-flex; align-items: center; text-decoration: none; }
+.booking-page-section { display: grid; grid-template-columns: minmax(240px, .8fr) minmax(340px, 1fr); gap: clamp(36px, 8vw, 120px); padding: 40px clamp(20px, 5.6vw, 88px) 90px; }
+.booking-page-copy h2 { margin: 0; font-size: clamp(38px, 5vw, 64px); letter-spacing: -.07em; line-height: .95; }
+.booking-page-copy h2 span { color: var(--red); }
+.booking-page-copy > p:not(.eyebrow) { max-width: 460px; color: #aaa; line-height: 1.8; font-size: 13px; }
+.booking-page-copy .booking-private-note { padding: 14px 16px; border-left: 2px solid var(--red); background: #160e0f; font: 10px/1.7 var(--mono); }
+.booking-page-form { padding: 26px; border: 1px solid #3c2225; background: #101010; box-shadow: 0 0 36px #f02d370b; }
+.time-range-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.time-range-fields > div { display: flex; flex-direction: column; gap: 10px; }
+.admin-form textarea { width: 100%; min-height: 100px; resize: vertical; border: 1px solid #383838; outline: 0; background: #0b0b0b; color: var(--white); padding: 12px; font: 13px/1.6 var(--sans); }
+.admin-form textarea:focus { border-color: var(--red); box-shadow: 0 0 16px #f02d3720; }
+.admin-form button:disabled { opacity: .6; cursor: wait; }
+.admin-flyer-library { max-width: 1560px; margin: 0 auto; padding: 70px clamp(20px, 5.6vw, 88px); scroll-margin-top: 100px; }
+.admin-flyer-library[hidden] { display: none !important; }
+@media(max-width:980px) {
+  .topbar { flex-wrap: wrap; height: auto; min-height: 74px; padding-top: 12px; padding-bottom: 12px; }
+  .site-menu { order: 3; flex: 1 0 100%; justify-content: flex-start; padding-top: 6px; }
+  .topbar-right { margin-left: auto; }
+}
+@media(max-width:720px) {
+  .booking-page-section { grid-template-columns: 1fr; gap: 26px; }
+  .booking-page-form { padding: 19px; }
+}
+@media(max-width:600px) {
+  .site-menu { gap: 17px; overflow-x: auto; }
+  .site-menu a { white-space: nowrap; font-size: 8px; }
+  .page-hero { padding-top: 64px; padding-bottom: 38px; }
+  .page-hero > p:last-child { font-size: 12px; }
+  .page-cta { align-items: flex-start; flex-direction: column; padding-top: 20px; padding-bottom: 20px; }
+}

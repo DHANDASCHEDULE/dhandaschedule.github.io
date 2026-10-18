@@ -497,6 +497,7 @@ function setAdminSession(isSignedIn) {
   isDhandaSignedIn = isSignedIn;
   document.querySelector("#admin-tools").hidden = !isSignedIn;
   document.querySelector("#admin-dashboard").hidden = !isSignedIn;
+  document.querySelector("#admin-flyer-library").hidden = !isSignedIn;
   document.querySelector("#login-open").hidden = isSignedIn;
   if (isSignedIn) loadBookingRequests();
   else document.querySelector("#request-count").textContent = "0";
@@ -857,7 +858,6 @@ document.querySelector("#remove-open").addEventListener("click", () => {
   setMessage(document.querySelector("#remove-message"), "");
   showAdminForm(removeForm);
 });
-document.querySelector("#booking-open").addEventListener("click", openBookingDialog);
 document.querySelector("#booking-requests-open").addEventListener("click", () => {
   if (!isDhandaSignedIn) return;
   loadBookingRequests();
@@ -872,11 +872,16 @@ document.querySelector("#dashboard-open").addEventListener("click", () => {
   refreshDashboard();
   document.querySelector("#admin-dashboard").scrollIntoView({ behavior: "smooth", block: "center" });
 });
+document.querySelector("#flyer-library-open").addEventListener("click", () => {
+  if (!isDhandaSignedIn) return;
+  document.querySelector("#admin-flyer-library").scrollIntoView({ behavior: "smooth", block: "start" });
+});
 document.querySelectorAll("[data-dashboard-action]").forEach(button => button.addEventListener("click", () => {
   const action = button.dataset.dashboardAction;
   if (action === "add") document.querySelector("#add-open").click();
   if (action === "requests") document.querySelector("#booking-requests-open").click();
   if (action === "flyer") document.querySelector("#flyer-open").click();
+  if (action === "manage-flyers") document.querySelector("#flyer-library-open").click();
 }));
 document.querySelector("#logout-button").addEventListener("click", async () => {
   if (supabaseClient) await supabaseClient.auth.signOut();
@@ -920,4 +925,8 @@ if (supabaseConfigured()) {
     });
     await loadRemoteSchedule();
   }).catch(error => console.error("Supabase initialization failed", error));
+}
+
+if (new URLSearchParams(window.location.search).get("login") === "1") {
+  showAdminForm(loginForm);
 }

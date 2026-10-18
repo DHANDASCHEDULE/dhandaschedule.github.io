@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090909">
+  <meta name="description" content="Send DHANDA a professional hosting or special event booking inquiry.">
+  <title>Book DHANDA — Host &amp; Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=20261018-multipage">
+  <script src="supabase-config.js?v=20261012-admin"></script>
+  <script type="module" src="booking-page.js?v=20261018-multipage"></script>
+</head>
+<body class="content-page">
+  <header class="topbar" id="top">
+    <a class="wordmark" href="index.html">DHANDA<span>•</span></a>
+    <nav class="site-menu" aria-label="Main menu"><a href="index.html">AGENDA</a><a href="about.html">ABOUT</a><a href="services.html">SERVICES</a><a href="flyers.html">FLYERS</a></nav>
+    <div class="topbar-right"><span class="timezone"><i></i> PACIFIC TIME / SLT</span><div class="nav-actions"><a class="book-button" aria-current="page" href="booking.html">BOOK DHANDA <span>↗</span></a><a class="login-button login-link" href="index.html?login=1">LOGIN <span>↗</span></a></div></div>
+  </header>
+  <main>
+    <section class="page-hero"><p class="eyebrow">DHANDA / PRIVATE BOOKING REQUEST</p><h1>LET'S MAKE<br><em>IT HAPPEN.</em></h1><p>Share the key details and DHANDA will review your inquiry.</p></section>
+    <section class="booking-page-section page-section" aria-labelledby="booking-title">
+      <div class="booking-page-copy"><p class="eyebrow">01 / BOOKING INQUIRY</p><h2 id="booking-title">BOOK DHANDA<span>.</span></h2><p>For club bookings, personal hosting, and special events. Times are entered in Second Life Time (SLT).</p><p class="booking-private-note">Your request goes to DHANDA's private inbox. Submitting this form does not confirm a booking.</p></div>
+      <form id="booking-page-form" class="admin-form booking-page-form">
+        <label for="booking-type">REQUEST TYPE</label><select id="booking-type" required><option value="host">HOST BOOKING · CLUB / DJ / SINGER</option><option value="party">PARTY / SPECIAL EVENT</option></select>
+        <label for="sl-nick">SECOND LIFE NICKNAME</label><input id="sl-nick" maxlength="120" required placeholder="Your in-world name">
+        <label for="discord-handle">DISCORD</label><input id="discord-handle" maxlength="120" required placeholder="Username or server contact">
+        <label for="club-name">CLUB NAME</label><input id="club-name" maxlength="120" required>
+        <label for="landmark">LANDMARK / LOCATION</label><input id="landmark" maxlength="300" required placeholder="Second Life landmark or venue location">
+        <label for="requested-date">PREFERRED DATE</label><input id="requested-date" type="date" required>
+        <div class="time-range-fields"><div><label for="requested-time">FROM · SLT</label><input id="requested-time" type="time" required></div><div><label for="requested-end-time">UNTIL · SLT</label><input id="requested-end-time" type="time" required></div></div>
+        <label for="booking-message">MESSAGE <span class="optional-label">OPTIONAL</span></label><textarea id="booking-message" maxlength="1100" rows="4" placeholder="Tell DHANDA about the booking."></textarea>
+        <div class="honeypot" aria-hidden="true"><label for="booking-website">Website</label><input id="booking-website" name="website" tabindex="-1" autocomplete="off"></div>
+        <button class="primary-action" type="submit">SEND BOOKING REQUEST <span>↗</span></button><p class="form-message" id="booking-message-status" role="status"></p>
+      </form>
+    </section>
+  </main>
+  <footer><span class="wordmark">DHANDA<span>•</span></span><span>HOST &amp; MANAGER / 2026</span><a href="#top">BACK TO TOP ↑</a></footer>
+</body>
+</html>
