@@ -729,12 +729,16 @@ async function deleteBookingRequest(requestId, button) {
   if (!window.confirm("Apagar esta solicitação? A mensagem será excluída, mas um horário já aceito continuará reservado na agenda.")) return;
   button.disabled = true;
   try {
-    const { error } = await supabaseClient.from("booking_inquiries").delete().eq("id", requestId);
+    const { error } = await supabaseClient.rpc("dhanda_delete_booking_request", {
+      p_request_id: requestId
+    });
     if (error) throw error;
     await loadBookingRequests();
   } catch (error) {
+    console.error("Could not delete booking inquiry", error);
     button.disabled = false;
-    window.alert("Não foi possível apagar a mensagem. Confirme se a atualização de permissões de exclusão foi executada no Supabase.");
+    const detail = error?.message ? `\n\nDetalhe: ${error.message}` : "";
+    window.alert(`Não foi possível apagar a mensagem. Confirme se a atualização de exclusão foi executada no Supabase.${detail}`);
   }
 }
 

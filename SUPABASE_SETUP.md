@@ -30,7 +30,7 @@ The schedule stores one date and start time per slot. It does not store an end t
 
 ## Upgrade: party requests and delete controls
 
-The public booking form includes a request type for regular host bookings or parties/special events. The selected type is saved with the inquiry so DHANDA can identify it in her private inbox. To enable the inbox's **APAGAR MENSAGEM** action, run `supabase-booking-delete-upgrade.sql` once in the Supabase SQL Editor. Row Level Security limits inquiry deletion to the DHANDA account. Removing an accepted inquiry only removes its message; its reserved calendar slot stays in place.
+The public booking form includes a request type for regular host bookings or parties/special events. The selected type is saved with the inquiry so DHANDA can identify it in her private inbox. To enable the inbox's **APAGAR MENSAGEM** action, run `supabase-booking-delete-upgrade.sql` in the Supabase SQL Editor. It is safe to run again: it grants the table permission and installs the `dhanda_delete_booking_request` RPC, which checks DHANDA's authenticated email before deleting. Removing an accepted inquiry only removes its message; its reserved calendar slot stays in place.
 
 ## Upgrade: public party-flyer gallery
 
