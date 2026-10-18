@@ -46,4 +46,8 @@ Drafts do not appear in the public gallery. The existing flyer bucket is public,
 
 Before publishing the matching update, run `supabase-time-range-upgrade.sql` once in the SQL Editor. It adds the requester's SL nickname, Discord, club, landmark, and requested start/end times, plus end times for DHANDA's availability blocks. Existing calendar entries remain unchanged and continue to display their original start times until DHANDA edits them into ranges. When a request is accepted, only the requested part of an available block is reserved; any remaining available time is preserved.
 
+## Upgrade: periods ending at midnight
+
+Run [`supabase-midnight-range-upgrade.sql`](supabase-midnight-range-upgrade.sql) once in the SQL Editor to allow a range such as 11:00 PM–12:00 AM. It updates the database checks and booking-acceptance function to treat `00:00` as midnight at the end of that date. The site displays these ranges with “(+1 day)”.
+
 O site mantém o schedule inicial visível enquanto o Supabase não estiver configurado. Não publique a integração como pronta antes de preencher a configuração, executar o SQL e importar os horários iniciais.

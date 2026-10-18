@@ -294,8 +294,16 @@ function timeToMinutes(time) {
   return hour * 60 + minute;
 }
 
+function timeRangeEndMinutes(startTime, endTime) {
+  const startMinute = timeToMinutes(startTime);
+  const endMinute = timeToMinutes(endTime);
+  return endMinute === 0 && startMinute > 0 ? 24 * 60 : endMinute;
+}
+
 function timeRangeLabel(entry) {
-  return entry.end_time ? `${timeLabel(entry.start_time)} – ${timeLabel(entry.end_time)}` : timeLabel(entry.start_time);
+  if (!entry.end_time) return timeLabel(entry.start_time);
+  const nextDay = String(entry.end_time).slice(0, 5) === "00:00" && timeToMinutes(entry.start_time) > 0;
+  return `${timeLabel(entry.start_time)} – ${timeLabel(String(entry.end_time).slice(0, 5))}${nextDay ? " (+1 day)" : ""}`;
 }
 
 function refreshDashboard() {
@@ -551,8 +559,10 @@ async function saveScheduleEntry(event) {
   const time = document.querySelector("#add-time").value;
   const endTime = document.querySelector("#add-end-time").value;
   const status = document.querySelector("#schedule-status").value;
-  if (timeToMinutes(endTime) <= timeToMinutes(time)) {
-    setMessage(message, "O horário ATÉ precisa ser depois do horário DE, no mesmo dia.", true);
+  const startMinute = timeToMinutes(time);
+  const endMinute = timeRangeEndMinutes(time, endTime);
+  if (!endTime || endMinute <= startMinute) {
+    setMessage(message, "O horário ATÉ precisa ser posterior ao horário DE. Use 00:00 para indicar meia-noite.", true);
     return;
   }
   try {
@@ -561,14 +571,12 @@ async function saveScheduleEntry(event) {
     const { data: sameDayEntries, error: lookupError } = await client.from("schedule_events")
       .select("id,start_time,end_time").eq("event_date", date);
     if (lookupError) throw lookupError;
-    const startMinute = timeToMinutes(time);
-    const endMinute = timeToMinutes(endTime);
     const overlaps = sameDayEntries.some(entry => {
       if (editingScheduleId && entry.id === editingScheduleId) return false;
       const existingStart = String(entry.start_time).slice(0, 5);
       const existingStartMinute = timeToMinutes(existingStart);
       const existingEndMinute = entry.end_time
-        ? timeToMinutes(String(entry.end_time).slice(0, 5))
+        ? timeRangeEndMinutes(existingStart, String(entry.end_time).slice(0, 5))
         : Math.min(24 * 60, existingStartMinute + 1);
       return startMinute < existingEndMinute && existingStartMinute < endMinute;
     });
@@ -586,6 +594,10 @@ async function saveScheduleEntry(event) {
     setMessage(message, "Horário e status atualizados no schedule público.");
     await loadRemoteSchedule();
   } catch (error) {
+    if (error?.code === "23514") {
+      setMessage(message, "O Supabase ainda bloqueia horários até 00:00. Execute a atualização SQL de meia-noite para liberar esse horário.", true);
+      return;
+    }
     setMessage(message, "Não foi possível salvar. Confira sua sessão e tente novamente.", true);
   }
 }
@@ -756,8 +768,8 @@ async function submitBookingInquiry(event) {
     if (!client) throw new Error("Booking is not configured.");
     const startTime = document.querySelector("#requested-time").value;
     const endTime = document.querySelector("#requested-end-time").value;
-    if (timeToMinutes(endTime) <= timeToMinutes(startTime)) {
-      setMessage(message, "The UNTIL time must be after the FROM time on the same day.", true);
+    if (!endTime || timeRangeEndMinutes(startTime, endTime) <= timeToMinutes(startTime)) {
+      setMessage(message, "The UNTIL time must be after the FROM time. Use 00:00 to indicate midnight.", true);
       return;
     }
     const requestType = document.querySelector("#booking-type").value === "party" ? "Party / special event" : "Host booking";
@@ -777,6 +789,10 @@ async function submitBookingInquiry(event) {
     bookingForm.reset();
     setMessage(message, "Request sent. DHANDA will review your booking inquiry.");
   } catch (error) {
+    if (error?.code === "23514") {
+      setMessage(message, "O Supabase ainda bloqueia horários até 00:00. Execute a atualização SQL de meia-noite para liberar esse horário.", true);
+      return;
+    }
     setMessage(message, "Não foi possível enviar agora. Tente novamente mais tarde.", true);
   }
 }

@@ -1,6 +1,7 @@
 const form = document.querySelector("#booking-page-form");
 const statusMessage = document.querySelector("#booking-message-status");
 const minutes = (value) => { const [hours, mins] = value.split(":").map(Number); return hours * 60 + mins; };
+const endMinutes = (start, end) => end === "00:00" && minutes(start) > 0 ? 24 * 60 : minutes(end);
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -12,8 +13,8 @@ form.addEventListener("submit", async (event) => {
   }
   const startTime = document.querySelector("#requested-time").value;
   const endTime = document.querySelector("#requested-end-time").value;
-  if (minutes(endTime) <= minutes(startTime)) {
-    statusMessage.textContent = "The UNTIL time must be after the FROM time on the same day.";
+  if (!endTime || endMinutes(startTime, endTime) <= minutes(startTime)) {
+    statusMessage.textContent = "The UNTIL time must be after the FROM time. Use 00:00 to indicate midnight.";
     statusMessage.classList.add("is-error");
     return;
   }
@@ -42,7 +43,9 @@ form.addEventListener("submit", async (event) => {
     statusMessage.textContent = "Request sent. DHANDA will review your booking inquiry.";
   } catch (error) {
     console.error("Could not submit booking inquiry", error);
-    statusMessage.textContent = "Could not send the request right now. Please try again later.";
+    statusMessage.textContent = error?.code === "23514"
+      ? "The database still blocks 00:00 end times. Ask DHANDA to run the midnight-time SQL update."
+      : "Could not send the request right now. Please try again later.";
     statusMessage.classList.add("is-error");
   } finally {
     button.disabled = false;
