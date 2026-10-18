@@ -150,8 +150,8 @@
     <form id="add-form" class="admin-form" hidden>
       <p class="form-intro">ADICIONE OU EDITE UM PERÍODO DE DISPONIBILIDADE NO SCHEDULE</p>
       <label for="add-date">DIA</label><input id="add-date" type="date" required>
-      <label for="add-time">HORÁRIO DE · SLT</label><input id="add-time" type="time" required>
-      <label for="add-end-time">HORÁRIO ATÉ · 00:00 = MEIA-NOITE</label><input id="add-end-time" type="time" required>
+      <label for="add-time">HORÁRIO DE · SLT (12H AM/PM)</label><input id="add-time" type="time" lang="en-US" required>
+      <label for="add-end-time">HORÁRIO ATÉ · SLT (12H AM/PM)</label><input id="add-end-time" type="time" lang="en-US" required>
       <label for="schedule-status">STATUS PÚBLICO</label>
       <select id="schedule-status" required>
         <option value="available">DISPONÍVEL PARA BOOKING</option>
@@ -186,8 +186,8 @@
       <label for="club-name">CLUB NAME</label><input id="club-name" maxlength="120" required>
       <label for="landmark">LANDMARK / LOCATION</label><input id="landmark" maxlength="300" required placeholder="Second Life landmark or venue location">
       <label for="requested-date">PREFERRED DATE</label><input id="requested-date" type="date" required>
-      <label for="requested-time">FROM · SLT</label><input id="requested-time" type="time" required>
-      <label for="requested-end-time">UNTIL · 00:00 = MIDNIGHT</label><input id="requested-end-time" type="time" required>
+      <label for="requested-time">FROM · SLT (12H AM/PM)</label><input id="requested-time" type="time" lang="en-US" required>
+      <label for="requested-end-time">UNTIL · SLT (12H AM/PM · 12 AM = MIDNIGHT)</label><input id="requested-end-time" type="time" lang="en-US" required>
       <label for="booking-message">MESSAGE <span class="optional-label">OPTIONAL</span></label><textarea id="booking-message" maxlength="1100" rows="3" placeholder="Tell DHANDA about the booking."></textarea>
       <div class="honeypot" aria-hidden="true"><label for="booking-website">Website</label><input id="booking-website" name="website" tabindex="-1" autocomplete="off"></div>
       <button class="primary-action" type="submit">SEND BOOKING REQUEST <span>↗</span></button>
