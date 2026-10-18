@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#090909">
-  <meta name="description" content="Agenda de trabalho da DHANDA como host e manager, com calendário de horários e próximo turno.">
+  <meta name="description" content="DHANDA's work schedule as a host and manager, with an availability calendar and upcoming shift.">
   <title>DHANDA — Host &amp; Manager Schedule</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,7 +17,7 @@
   <header class="topbar">
     <a class="wordmark" href="index.html" aria-label="DHANDA home">DHANDA<span>•</span></a>
     <nav class="site-menu" aria-label="Main menu">
-      <a class="is-active" aria-current="page" href="index.html">AGENDA</a>
+      <a class="is-active" aria-current="page" href="index.html">SCHEDULE</a>
       <a href="about.html">ABOUT</a>
       <a href="services.html">SERVICES</a>
       <a href="flyers.html">FLYERS</a>
@@ -62,7 +62,7 @@
       </div>
       <div class="dashboard-stats" aria-live="polite">
         <article class="dashboard-stat"><span>PRÓXIMO PERÍODO LIVRE</span><strong id="dashboard-next">—</strong><small id="dashboard-next-time">Nenhum período futuro</small></article>
-        <article class="dashboard-stat"><span>PERÍODOS DISPONÍVEIS</span><strong id="dashboard-available">0</strong><small>Na agenda pública</small></article>
+        <article class="dashboard-stat"><span>PERÍODOS DISPONÍVEIS</span><strong id="dashboard-available">0</strong><small>No schedule público</small></article>
         <article class="dashboard-stat"><span>PEDIDOS PENDENTES</span><strong id="dashboard-requests">0</strong><small>Solicitações para revisar</small></article>
         <article class="dashboard-stat"><span>FLYERS PUBLICADOS</span><strong id="dashboard-flyers">0</strong><small id="dashboard-drafts">0 rascunhos</small></article>
       </div>
@@ -147,7 +147,7 @@
       <p class="form-message" id="login-message" role="status"></p>
     </form>
     <form id="add-form" class="admin-form" hidden>
-      <p class="form-intro">ADICIONE OU EDITE UM PERÍODO DE DISPONIBILIDADE NA AGENDA</p>
+      <p class="form-intro">ADICIONE OU EDITE UM PERÍODO DE DISPONIBILIDADE NO SCHEDULE</p>
       <label for="add-date">DIA</label><input id="add-date" type="date" required>
       <label for="add-time">HORÁRIO DE · SLT</label><input id="add-time" type="time" required>
       <label for="add-end-time">HORÁRIO ATÉ · SLT</label><input id="add-end-time" type="time" required>
@@ -165,7 +165,7 @@
       <label for="remove-date">DIA</label><input id="remove-date" type="date" required>
       <label for="remove-time">HORÁRIO · DEIXE VAZIO PARA REMOVER O DIA TODO</label>
       <select id="remove-time"><option value="">DIA INTEIRO</option></select>
-      <button class="primary-action danger-action" type="submit">REMOVER DA AGENDA <span>−</span></button>
+      <button class="primary-action danger-action" type="submit">REMOVER DO SCHEDULE <span>−</span></button>
       <p class="form-message" id="remove-message" role="status"></p>
     </form>
   </dialog>

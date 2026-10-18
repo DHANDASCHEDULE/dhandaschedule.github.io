@@ -15,7 +15,7 @@ O site continua público para consulta. A conta autenticada `dhanda@dhandaschedu
 ## O que o painel faz
 
 - Login com usuário `dhanda` e senha validada pelo Supabase Auth.
-- “Adicionar horário” grava a data e hora SLT e atualiza a agenda pública e o cartão de próximo turno.
+- “Adicionar horário” grava a data e hora SLT e atualiza o schedule público e o cartão de próximo turno.
 - “Remover horário” permite apagar um horário específico ou todos os horários de um dia.
 - Dhanda can edit a time slot and mark it available, reserved, or unavailable. Existing October time slots are marked reserved by the upgrade.
 - The public “BOOK DHANDA” form sends inquiries to Supabase. Only the authenticated Dhanda account can read them, accept or decline them, and acceptance reserves the requested time.
@@ -46,4 +46,4 @@ Drafts do not appear in the public gallery. The existing flyer bucket is public,
 
 Before publishing the matching update, run `supabase-time-range-upgrade.sql` once in the SQL Editor. It adds the requester's SL nickname, Discord, club, landmark, and requested start/end times, plus end times for DHANDA's availability blocks. Existing calendar entries remain unchanged and continue to display their original start times until DHANDA edits them into ranges. When a request is accepted, only the requested part of an available block is reserved; any remaining available time is preserved.
 
-O site mantém a agenda inicial visível enquanto o Supabase não estiver configurado. Não publique a integração como pronta antes de preencher a configuração, executar o SQL e importar a agenda inicial.
+O site mantém o schedule inicial visível enquanto o Supabase não estiver configurado. Não publique a integração como pronta antes de preencher a configuração, executar o SQL e importar os horários iniciais.

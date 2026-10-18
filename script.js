@@ -583,7 +583,7 @@ async function saveScheduleEntry(event) {
     if (error) throw error;
     selectedDate = date;
     editingScheduleId = null;
-    setMessage(message, "Horário e status atualizados na agenda pública.");
+    setMessage(message, "Horário e status atualizados no schedule público.");
     await loadRemoteSchedule();
   } catch (error) {
     setMessage(message, "Não foi possível salvar. Confira sua sessão e tente novamente.", true);
@@ -727,7 +727,7 @@ async function decideBookingRequest(requestId, decision, button) {
 
 async function deleteBookingRequest(requestId, button) {
   if (!isDhandaSignedIn || !supabaseClient) return;
-  if (!window.confirm("Apagar esta solicitação? A mensagem será excluída, mas um horário já aceito continuará reservado na agenda.")) return;
+  if (!window.confirm("Apagar esta solicitação? A mensagem será excluída, mas um horário já aceito continuará reservado no schedule.")) return;
   button.disabled = true;
   try {
     const { error } = await supabaseClient.rpc("dhanda_delete_booking_request", {
@@ -821,7 +821,7 @@ async function removeScheduledSet(event) {
       setMessage(message, "Nenhum horário encontrado para essa seleção.", true);
       return;
     }
-    setMessage(message, time ? "Horário removido da agenda." : "Horários desse dia removidos da agenda.");
+    setMessage(message, time ? "Horário removido do schedule." : "Horários desse dia removidos do schedule.");
     await loadRemoteSchedule();
     refreshRemoveTimes();
   } catch (error) {
