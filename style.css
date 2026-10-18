@@ -467,3 +467,10 @@ body {
   .page-hero > p:last-child { font-size: 12px; }
   .page-cta { align-items: flex-start; flex-direction: column; padding-top: 20px; padding-bottom: 20px; }
 }
+
+.page-transition { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; overflow: hidden; background: radial-gradient(ellipse at 72% 50%, #1d0b0e 0%, #0b0909 48%, #070707 100%); clip-path: inset(0 100% 0 0); pointer-events: none; transition: clip-path .52s cubic-bezier(.77,0,.18,1); }
+.page-transition.is-visible { clip-path: inset(0 0 0 0); }
+.page-transition__beam { position: absolute; top: 0; right: 0; width: 2px; height: 100%; background: #fb303b; box-shadow: 0 0 18px 5px #f02d3790, 0 0 70px 18px #f02d3733; opacity: 0; transition: opacity .18s .2s; }
+.page-transition.is-visible .page-transition__beam { opacity: 1; }
+.page-transition__label { position: relative; color: #f5f5f3; font: 800 clamp(26px, 5vw, 54px)/1 var(--sans); letter-spacing: .12em; text-shadow: 0 0 32px #f02d3740; opacity: 0; transform: translateY(12px); transition: opacity .22s .18s, transform .32s .15s; }
+.page-transition.is-visible .page-transition__label { opacity: 1; transform: translateY(0); }
