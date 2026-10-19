@@ -491,3 +491,6 @@ body {
 
 .site-menu .social-menu-link svg { display: block; width: 17px; height: 17px; overflow: visible; }
 @media(max-width:600px) { .site-menu .social-menu-link svg { width: 16px; height: 16px; } }
+
+.site-menu .social-menu-logo { display: block; width: 19px; height: 19px; object-fit: contain; }
+@media(max-width:600px) { .site-menu .social-menu-logo { width: 18px; height: 18px; } }
