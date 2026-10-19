@@ -482,3 +482,9 @@ body {
   .timezone-label { display: none; }
   .timezone time { min-width: 78px; font-size: 8px; }
 }
+
+/* DHANDA social profile shortcuts in the shared sticky menu */
+.site-menu .social-menu-link { width: 30px; height: 30px; display: inline-grid; flex: 0 0 30px; place-items: center; border: 1px solid #343434; border-radius: 50%; color: #aaa; font: 700 8px var(--sans); letter-spacing: -.04em; text-decoration: none; transition: color .2s, border-color .2s, background .2s, box-shadow .2s, transform .2s; }
+.site-menu .social-menu-link::after { display: none; }
+.site-menu .social-menu-link:hover, .site-menu .social-menu-link:focus-visible { color: #fff; border-color: var(--red); background: #170c0d; box-shadow: 0 0 18px #f02d3740; transform: translateY(-1px); outline: none; }
+@media(max-width:600px) { .site-menu { gap: 12px; } .site-menu .social-menu-link { width: 27px; height: 27px; flex-basis: 27px; font-size: 7px; } }
